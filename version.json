@@ -1,0 +1,11 @@
+{
+  "version": "1.7.4",
+  "versionCode": 13,
+  "downloadUrl": "https://github.com/ZabeJY/curoco/releases/download/v1.7.4/app-release.apk",
+  "changelog": [
+    "OTA热更新支持：expo-updates + GitHub Pages",
+    "我的页面头像改为圆角方形样式",
+    "TTS空文本保护 + voiceclone模型名修正",
+    "检查更新修复：版本检查迁移到公开OTA仓库"
+  ]
+}
