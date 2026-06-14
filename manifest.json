@@ -1,7 +1,7 @@
 {
   "version": "1.7.4",
-  "buildTime": "2026-06-14T11:54:48Z",
-  "changelog": "修复检查更新连接失败",
+  "buildTime": "2026-06-14T12:15:50Z",
+  "changelog": "表情面板网络tab滚动修复",
   "runtimeVersion": "1.7.4",
   "bundleUrl": "https://zabejy.github.io/curoco-ota/_expo/static/js/android/index.js",
   "platform": "android"
