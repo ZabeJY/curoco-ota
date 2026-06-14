@@ -1,8 +1,8 @@
 {
-  "version": "1.7.5",
-  "buildTime": "2026-06-14T12:28:20Z",
-  "changelog": "表情面板重构+AI表情包匹配+长消息分段",
-  "runtimeVersion": "1.7.5",
+  "version": "1.7.6",
+  "buildTime": "2026-06-14T13:02:56Z",
+  "changelog": "语音通话界面全面重构+实时对话转录",
+  "runtimeVersion": "1.7.6",
   "bundleUrl": "https://zabejy.github.io/curoco-ota/_expo/static/js/android/index.js",
   "platform": "android"
 }
