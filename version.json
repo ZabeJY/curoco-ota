@@ -1,12 +1,11 @@
 {
-  "version": "1.7.4",
-  "versionCode": 13,
-  "downloadUrl": "https://github.com/ZabeJY/curoco/releases/download/v1.7.4/app-release.apk",
+  "version": "1.7.5",
+  "versionCode": 14,
+  "downloadUrl": "https://github.com/ZabeJY/curoco/releases/download/v1.7.5/app-release.apk",
   "changelog": [
-    "OTA热更新修复：统一仓库+expo-updates自动检查",
-    "生活打卡支持多次签到",
-    "语音消息转写自动显示",
-    "颜色选择器溢出修复",
-    "版本号统一为1.7.4"
+    "表情面板重构：内置表情+我的(含网络搜索)",
+    "AI角色可使用用户导入的表情包回复",
+    "长消息自动分段发送",
+    "检查更新连接修复"
   ]
 }
