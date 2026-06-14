@@ -1,7 +1,7 @@
 {
   "version": "1.7.4",
-  "buildTime": "2026-06-13T16:12:07Z",
-  "changelog": "修复头像尺寸 + 简化更新检查逻辑",
+  "buildTime": "2026-06-14T11:43:34Z",
+  "changelog": "OTA热更新修复+生活打卡多次签到+语音转写修复",
   "runtimeVersion": "1.7.4",
   "bundleUrl": "https://zabejy.github.io/curoco-ota/_expo/static/js/android/index.js",
   "platform": "android"
