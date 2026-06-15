@@ -198,6 +198,7 @@ export async function runMigrations(db: SQLiteDatabase): Promise<void> {
     await addCol('likes', 'TEXT', "''");
     await addCol('catchphrase', 'TEXT', "''");
     await addCol('emotion_style', 'TEXT', "''");
+    await addCol('chat_background_opacity', 'REAL', '0.15');
   } catch (e) {
     console.warn('Migration check failed:', e);
   }

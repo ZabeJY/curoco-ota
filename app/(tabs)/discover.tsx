@@ -26,6 +26,8 @@ import LikeButton from '../../src/components/social/LikeButton';
 import ParallaxHeader from '../../src/components/social/ParallaxHeader';
 import { SkeletonFeed } from '../../src/components/social/SkeletonCard';
 import AnimatedPostInsert from '../../src/components/social/AnimatedPostInsert';
+import GlassButton from '../../src/components/common/GlassButton';
+import SparkleText from '../../src/components/common/SparkleText';
 import { SocialRepo } from '../../src/db/repositories/SocialRepositoryNew';
 import { useCompanionStore } from '../../src/store/companionStore';
 import { useSettingsStore } from '../../src/store/settingsStore';
@@ -704,16 +706,18 @@ export default function DiscoverPage() {
               <View style={styles.emptyIconWrap}>
                 <Ionicons name="sparkles" size={48} color="#6C63FF" />
               </View>
-              <Text style={styles.emptyTitle}>还没有动态</Text>
               <Text style={styles.emptySub}>分享你的想法，让角色们看到你的生活</Text>
-              <TouchableOpacity style={styles.emptyBtn} onPress={() => setShowComposer(true)} activeOpacity={0.7}>
-                <Ionicons name="create-outline" size={16} color="#fff" />
-                <Text style={styles.emptyBtnText}>发布动态</Text>
-              </TouchableOpacity>
+              <SparkleText text="还没有动态" style={styles.emptyTitle} />
+              <GlassButton
+                label="发布动态"
+                onPress={() => setShowComposer(true)}
+                variant="primary"
+                icon={<Ionicons name="create-outline" size={16} color="#fff" />}
+              />
             </View>
           )
         }
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingTop: 96, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
       />
 

@@ -13,6 +13,7 @@ import { useRouter, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import Avatar from '../../src/components/common/Avatar';
+import SparkleText from '../../src/components/common/SparkleText';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { useSettingsStore } from '../../src/store/settingsStore';
 import { SocialRepo } from '../../src/db/repositories/SocialRepositoryNew';
@@ -165,7 +166,7 @@ export default function ProfilePage() {
           {/* User Signature — below cover, aligned with avatar */}
           {settings.userSignature ? (
             <View style={styles.signatureWrap}>
-              <Text style={[styles.userSignature, { color: theme.textSecondary }]}>{settings.userSignature}</Text>
+              <SparkleText text={settings.userSignature} style={[styles.userSignature, { color: theme.textSecondary }]} sparklesCount={6} />
             </View>
           ) : null}
 
@@ -235,10 +236,10 @@ const styles = StyleSheet.create({
   },
   // Content Card
   contentCard: {
-    marginTop: -16,
+    marginTop: -24,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    paddingTop: AVATAR_SIZE + AVATAR_BORDER_WIDTH * 2 + 16,
+    paddingTop: AVATAR_SIZE + AVATAR_BORDER_WIDTH * 2 + 24,
     paddingHorizontal: 20,
     minHeight: SCREEN_HEIGHT * 0.68,
   },
@@ -269,9 +270,9 @@ const styles = StyleSheet.create({
   // User Info
   signatureWrap: {
     position: 'absolute',
-    top: AVATAR_SIZE / 2 + AVATAR_BORDER_WIDTH - 8,
-    right: 28 + AVATAR_SIZE + AVATAR_BORDER_WIDTH * 2 + 12,
-    maxWidth: SCREEN_WIDTH - 28 - AVATAR_SIZE - AVATAR_BORDER_WIDTH * 2 - 12 - 20,
+    top: AVATAR_SIZE / 2 + AVATAR_BORDER_WIDTH - 22,
+    right: 28 + AVATAR_SIZE + AVATAR_BORDER_WIDTH * 2 + 32,
+    maxWidth: SCREEN_WIDTH - 28 - AVATAR_SIZE - AVATAR_BORDER_WIDTH * 2 - 32 - 20,
   },
   userSignature: {
     fontSize: 13, lineHeight: 18, fontStyle: 'italic',

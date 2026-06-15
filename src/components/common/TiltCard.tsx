@@ -20,7 +20,7 @@ interface TiltCardProps {
   disabled?: boolean;
 }
 
-export default function TiltCard({ children, style, containerStyle, disabled = false }: TiltCardProps) {
+export default React.memo(function TiltCard({ children, style, containerStyle, disabled = false }: TiltCardProps) {
   const rotateX = useRef(new Animated.Value(0)).current;
   const rotateY = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
@@ -97,7 +97,7 @@ export default function TiltCard({ children, style, containerStyle, disabled = f
       </View>
     </Animated.View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

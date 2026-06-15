@@ -15,6 +15,8 @@ import * as FileSystem from 'expo-file-system';
 import { CompanionRepository } from '../../../src/db/repositories/CompanionRepository';
 import { useTheme } from '../../../src/theme/ThemeProvider';
 import Avatar from '../../../src/components/common/Avatar';
+import Slider from '../../../src/components/common/Slider';
+import GlassButton from '../../../src/components/common/GlassButton';
 import type { Companion } from '../../../src/types/models';
 
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
@@ -43,6 +45,7 @@ export default function CompanionEditPage() {
   const [proactive, setProactive] = useState(false);
   const [avatarUri, setAvatarUri] = useState('');
   const [chatBackgroundUri, setChatBackgroundUri] = useState('');
+  const [chatBackgroundOpacity, setChatBackgroundOpacity] = useState(0.15);
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
@@ -65,6 +68,7 @@ export default function CompanionEditPage() {
         setProactive(c.proactiveMessageEnabled);
         setAvatarUri(c.avatarUri || '');
         setChatBackgroundUri(c.chatBackgroundUri || '');
+        setChatBackgroundOpacity(c.chatBackgroundOpacity ?? 0.15);
       }
     }).catch(() => Alert.alert('错误', '加载失败')).finally(() => setLoading(false));
   }, [id]);
@@ -143,6 +147,7 @@ export default function CompanionEditPage() {
         voiceEnabled,
         proactiveMessageEnabled: proactive,
         chatBackgroundUri: chatBackgroundUri || null,
+        chatBackgroundOpacity,
       });
       Alert.alert('保存成功', '', [{ text: '好的', onPress: () => router.back() }]);
     } catch (e: any) {
@@ -187,9 +192,20 @@ export default function CompanionEditPage() {
           )}
         </TouchableOpacity>
         {chatBackgroundUri ? (
-          <TouchableOpacity onPress={() => setChatBackgroundUri('')} style={{ marginTop: 8, alignItems: 'center' }}>
-            <Text style={{ color: '#FF4757', fontSize: 13 }}>移除背景</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity onPress={() => setChatBackgroundUri('')} style={{ marginTop: 8, alignItems: 'center' }}>
+              <Text style={{ color: '#FF4757', fontSize: 13 }}>移除背景</Text>
+            </TouchableOpacity>
+            <View style={{ marginTop: 12 }}>
+              <Slider
+                value={chatBackgroundOpacity} min={0.05} max={0.5} step={0.05}
+                onChange={(v) => setChatBackgroundOpacity(v)}
+                onSlidingComplete={(v) => setChatBackgroundOpacity(v)}
+                trackColor={theme.primary} thumbColor={theme.primary}
+                label="背景透明度" unit=""
+              />
+            </View>
+          </>
         ) : null}
       </View>
 
@@ -248,9 +264,13 @@ export default function CompanionEditPage() {
         </View>
       </View>
 
-      <TouchableOpacity style={[styles.saveBtn, saving && { opacity: 0.6 }]} onPress={handleSave} disabled={saving}>
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveBtnText}>保存</Text>}
-      </TouchableOpacity>
+      <GlassButton
+        label={saving ? '保存中...' : '保存'}
+        onPress={handleSave}
+        variant="primary"
+        disabled={saving}
+        style={{ marginTop: 20 }}
+      />
     </ScrollView>
   );
 }

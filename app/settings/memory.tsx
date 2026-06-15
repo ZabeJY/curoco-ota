@@ -6,11 +6,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, TouchableOpacity, ScrollView, StyleSheet,
-  Alert, TextInput, Modal, ActivityIndicator,
+  Alert, TextInput, ActivityIndicator,
 } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import GlassModal from '../../src/components/common/GlassModal';
 import { ConversationRepository } from '../../src/db/repositories/ConversationRepo';
 import { CompanionRepository } from '../../src/db/repositories/CompanionRepository';
 import { MessageRepository } from '../../src/db/repositories/MessageRepository';
@@ -194,29 +195,26 @@ export default function MemoryPage() {
       )}
 
       {/* Edit Modal */}
-      <Modal visible={!!editingId} transparent animationType="fade" onRequestClose={() => setEditingId(null)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <BlurView intensity={60} tint="light" style={StyleSheet.absoluteFill} />
-            <Text style={styles.modalTitle}>编辑记忆</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={editText}
-              onChangeText={setEditText}
-              multiline
-              autoFocus
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalCancel} onPress={() => setEditingId(null)}>
-                <Text style={styles.modalCancelText}>取消</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.modalSave} onPress={handleSaveEdit}>
-                <Text style={styles.modalSaveText}>保存</Text>
-              </TouchableOpacity>
-            </View>
+      <GlassModal visible={!!editingId} onClose={() => setEditingId(null)}>
+        <View style={{ padding: 8 }}>
+          <Text style={styles.modalTitle}>编辑记忆</Text>
+          <TextInput
+            style={styles.modalInput}
+            value={editText}
+            onChangeText={setEditText}
+            multiline
+            autoFocus
+          />
+          <View style={styles.modalActions}>
+            <TouchableOpacity style={styles.modalCancel} onPress={() => setEditingId(null)}>
+              <Text style={styles.modalCancelText}>取消</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.modalSave} onPress={handleSaveEdit}>
+              <Text style={styles.modalSaveText}>保存</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+      </GlassModal>
     </ScrollView>
   );
 }
@@ -241,8 +239,6 @@ const styles = StyleSheet.create({
   memoryActions: { flexDirection: 'row', gap: 8 },
   memActionBtn: { padding: 4 },
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'center', alignItems: 'center', padding: 24 },
-  modalBox: { backgroundColor: 'rgba(255, 255, 255, 0.85)', borderRadius: 24, padding: 20, width: '100%', maxWidth: 400, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.4)', shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.08, shadowRadius: 20, elevation: 10 },
   modalTitle: { fontSize: 17, fontWeight: '600', color: '#1A1A2E', marginBottom: 12 },
   modalInput: { borderWidth: 1.5, borderColor: '#E8E8F0', borderRadius: 10, padding: 12, fontSize: 15, color: '#1A1A2E', minHeight: 80, textAlignVertical: 'top' },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 16 },

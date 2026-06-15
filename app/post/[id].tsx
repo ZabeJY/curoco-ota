@@ -11,6 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import TiltCard from '../../src/components/common/TiltCard';
+import GlassButton from '../../src/components/common/GlassButton';
 import { BlurView } from 'expo-blur';
 import Avatar from '../../src/components/common/Avatar';
 import { SocialRepo } from '../../src/db/repositories/SocialRepositoryNew';
@@ -223,13 +224,14 @@ export default function PostDetailScreen() {
             placeholder={replyTo ? `回复 ${replyTo.name}...` : '写评论...'}
             placeholderTextColor="#B0B0B0"
           />
-          <TouchableOpacity
-            style={[styles.sendBtn, !commentText.trim() && styles.sendBtnDisabled]}
+          <GlassButton
+            label="发送"
             onPress={handleComment}
+            variant="primary"
             disabled={!commentText.trim()}
-          >
-            <Text style={styles.sendBtnText}>发送</Text>
-          </TouchableOpacity>
+            style={{ paddingHorizontal: 16, paddingVertical: 8 }}
+            textStyle={{ fontSize: 14 }}
+          />
         </View>
       </View>
     </KeyboardAvoidingView>

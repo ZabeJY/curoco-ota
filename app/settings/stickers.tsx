@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
 import { useSettingsStore } from '../../src/store/settingsStore';
+import GlassModal from '../../src/components/common/GlassModal';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { StickerRepository, type CustomSticker } from '../../src/db/repositories/StickerRepository';
 import { VisionClient } from '../../src/core/api/VisionClient';
@@ -264,39 +265,37 @@ export default function StickerManagementPage() {
       )}
 
       {/* Edit meaning modal */}
-      {editingId && (
-        <View style={styles.editOverlay}>
-          <View style={[styles.editBox, { backgroundColor: theme.bgSecondary }]}>
-            <Text style={[styles.editTitle, { color: theme.textPrimary }]}>编辑含义</Text>
-            <TextInput
-              style={[styles.editInput, { color: theme.textPrimary, borderColor: theme.border }]}
-              value={editMeaning}
-              onChangeText={setEditMeaning}
-              multiline
-              autoFocus
-            />
-            <View style={styles.editActions}>
-              <TouchableOpacity onPress={() => setEditingId(null)} style={styles.editCancel}>
-                <Text style={{ color: theme.textSecondary }}>取消</Text>
+      <GlassModal visible={!!editingId} onClose={() => setEditingId(null)}>
+        <View style={{ padding: 8 }}>
+          <Text style={[styles.editTitle, { color: theme.textPrimary }]}>编辑含义</Text>
+          <TextInput
+            style={[styles.editInput, { color: theme.textPrimary, borderColor: theme.border }]}
+            value={editMeaning}
+            onChangeText={setEditMeaning}
+            multiline
+            autoFocus
+          />
+          <View style={styles.editActions}>
+            <TouchableOpacity onPress={() => setEditingId(null)} style={styles.editCancel}>
+              <Text style={{ color: theme.textSecondary }}>取消</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleSaveMeaning} style={styles.editSave}>
+              <Text style={{ color: '#fff', fontWeight: '600' }}>保存</Text>
+            </TouchableOpacity>
+            {apiConfigs.vision && (
+              <TouchableOpacity
+                onPress={() => {
+                  const sticker = stickers.find((s) => s.id === editingId);
+                  if (sticker) handleReidentify(sticker);
+                }}
+                style={styles.editReidentify}
+              >
+                <Text style={{ color: '#6C63FF', fontWeight: '600' }}>重新识别</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleSaveMeaning} style={styles.editSave}>
-                <Text style={{ color: '#fff', fontWeight: '600' }}>保存</Text>
-              </TouchableOpacity>
-              {apiConfigs.vision && (
-                <TouchableOpacity
-                  onPress={() => {
-                    const sticker = stickers.find((s) => s.id === editingId);
-                    if (sticker) handleReidentify(sticker);
-                  }}
-                  style={styles.editReidentify}
-                >
-                  <Text style={{ color: '#6C63FF', fontWeight: '600' }}>重新识别</Text>
-                </TouchableOpacity>
-              )}
-            </View>
+            )}
           </View>
         </View>
-      )}
+      </GlassModal>
 
       {/* Import button */}
       <TouchableOpacity
@@ -340,14 +339,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   gifText: { fontSize: 10, color: '#fff', fontWeight: '600' },
-  // Edit overlay
-  editOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center', alignItems: 'center',
-    padding: 24,
-  },
-  editBox: { width: '100%', borderRadius: 16, padding: 20 },
+  // Edit modal
   editTitle: { fontSize: 17, fontWeight: '600', marginBottom: 12 },
   editInput: {
     borderWidth: 1.5, borderRadius: 10, padding: 12,

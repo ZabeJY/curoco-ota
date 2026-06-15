@@ -6,19 +6,20 @@
 
 import React, { useState } from 'react';
 import {
-  View, Text, TouchableOpacity, ScrollView, StyleSheet, Modal, Image,
+  View, Text, TouchableOpacity, ScrollView, StyleSheet, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme/ThemeProvider';
+import GlassModal from '../../src/components/common/GlassModal';
 
 const TIER_DATA = [
-  { id: 'water', price: 2, icon: '💧', name: '瓶装矿泉水', desc: '续杯凉水，接着敲代码' },
-  { id: 'cola', price: 5, icon: '🥤', name: '罐装冰可乐', desc: '冰爽一下，改bug更有劲' },
-  { id: 'noodle', price: 8, icon: '🍜', name: '桶装泡面', desc: '深夜口粮，熬完这个版本' },
+  { id: 'water', price: 2, icon: '💧', name: '矿泉水', desc: '续杯凉水，接着敲代码' },
+  { id: 'cola', price: 5, icon: '🥤', name: '冰可乐', desc: '冰爽一下，改bug更有劲' },
+  { id: 'noodle', price: 8, icon: '🍜', name: '泡面', desc: '深夜口粮，熬完这个版本' },
   { id: 'deluxe', price: 12, icon: '🍝', name: '加肠泡面', desc: '豪华加餐，干劲直接拉满' },
-  { id: 'milktea', price: 16, icon: '🧋', name: '杯装奶茶', desc: '回血充能，安排新功能' },
+  { id: 'milktea', price: 16, icon: '🧋', name: '奶茶', desc: '回血充能，安排新功能' },
   { id: 'coffee', price: 28, icon: '☕', name: '美式咖啡', desc: '通宵迭代，加急更版' },
-  { id: 'meal', price: 50, icon: '🍱', name: '单人快餐', desc: '好好吃饭，长期维护' },
+  { id: 'meal', price: 50, icon: '🍱', name: '快餐', desc: '好好吃饭，长期维护' },
 ];
 
 const QR_IMAGES: Record<string, any> = {
@@ -97,34 +98,25 @@ export default function DonatePage() {
       </View>
 
       {/* QR Code Modal */}
-      <Modal visible={showQR} transparent animationType="fade" onRequestClose={() => setShowQR(false)}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setShowQR(false)}>
-          <View style={[styles.modalContent, { backgroundColor: theme.bgSecondary }]}>
-            {/* Header */}
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalIcon}>{selectedTier?.icon}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.modalName, { color: theme.textPrimary }]}>{selectedTier?.name}</Text>
-                <Text style={[styles.modalPrice, { color: theme.primary }]}>¥{selectedTier?.price}</Text>
-              </View>
-              <TouchableOpacity onPress={() => setShowQR(false)} style={styles.modalClose}>
-                <Ionicons name="close" size={20} color={theme.textTertiary} />
-              </TouchableOpacity>
+      <GlassModal visible={showQR} onClose={() => setShowQR(false)}>
+        <View style={{ padding: 8 }}>
+          {/* Header */}
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalIcon}>{selectedTier?.icon}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.modalName, { color: theme.textPrimary }]}>{selectedTier?.name}</Text>
+              <Text style={[styles.modalPrice, { color: theme.primary }]}>¥{selectedTier?.price}</Text>
             </View>
-
-            {/* QR Code */}
-            {qrImage && (
-              <View style={[styles.qrWrap, { backgroundColor: theme.bgTertiary }]}>
-                <Image source={qrImage} style={styles.qrImage} resizeMode="contain" />
-              </View>
-            )}
-
-            <Text style={[styles.modalHint, { color: theme.textTertiary }]}>
-              扫码后请备注「{selectedTier?.name}」
-            </Text>
           </View>
-        </TouchableOpacity>
-      </Modal>
+
+          {/* QR Code */}
+          {qrImage && (
+            <View style={[styles.qrWrap, { backgroundColor: theme.bgTertiary }]}>
+              <Image source={qrImage} style={styles.qrImage} resizeMode="contain" />
+            </View>
+          )}
+        </View>
+      </GlassModal>
     </ScrollView>
   );
 }
@@ -143,7 +135,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', flexWrap: 'wrap', gap: 12,
   },
   tierCard: {
-    width: '30%', borderRadius: 16, padding: 14,
+    width: '31%', borderRadius: 16, padding: 14,
     minHeight: 140, justifyContent: 'space-between',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
@@ -175,22 +167,12 @@ const styles = StyleSheet.create({
   disclaimerText: { fontSize: 11, lineHeight: 16 },
 
   // Modal
-  modalOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    padding: 24, paddingBottom: 40,
-    alignItems: 'center',
-  },
   modalHeader: {
     flexDirection: 'row', alignItems: 'center', width: '100%', marginBottom: 20,
   },
   modalIcon: { fontSize: 32, marginRight: 12 },
   modalName: { fontSize: 16, fontWeight: '600', marginBottom: 2 },
   modalPrice: { fontSize: 22, fontWeight: '800' },
-  modalClose: { padding: 8 },
 
   // QR Code
   qrWrap: {
@@ -198,5 +180,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center', overflow: 'hidden', marginBottom: 16,
   },
   qrImage: { width: 180, height: 180 },
-  modalHint: { fontSize: 12 },
 });

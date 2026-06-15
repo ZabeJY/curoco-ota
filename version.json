@@ -1,8 +1,8 @@
 {
-  "version": "1.8.1",
-  "versionCode": 21,
-  "downloadUrl": "https://github.com/ZabeJY/curoco/releases/download/v1.8.1/Curoco_v1.8.1.apk",
+  "version": "1.8.2",
+  "versionCode": 22,
+  "downloadUrl": "https://github.com/ZabeJY/curoco/releases/download/v1.8.2/Curoco_v1.8.2.apk",
   "changelog": [
-    "v1.8.1: 缩小图片尺寸重新构建"
+    "changelog"
   ]
 }

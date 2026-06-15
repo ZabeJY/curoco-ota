@@ -3,11 +3,12 @@
  * Better notification badges, auto-refresh on focus
  */
 
-import React, { useCallback, useState, useRef, useLayoutEffect } from 'react';
-import { View, FlatList, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
+import React, { useCallback, useState, useRef } from 'react';
+import { View, FlatList, StyleSheet, Text } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import ChatListItem from '../../src/components/chat/ChatList';
+import SparkleText from '../../src/components/common/SparkleText';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { ConversationRepository } from '../../src/db/repositories/ConversationRepo';
 import { CompanionRepository } from '../../src/db/repositories/CompanionRepository';
@@ -20,38 +21,17 @@ interface ConvWithComp extends Conversation {
 
 export default function ChatListPage() {
   const router = useRouter();
-  const navigation = useNavigation();
   const { theme } = useTheme();
   const [conversations, setConversations] = useState<ConvWithComp[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          onPress={() => router.push('/settings')}
-          style={{ marginRight: 16 }}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <View style={{
-            width: 32, height: 32, borderRadius: 16,
-            backgroundColor: 'rgba(0,0,0,0.25)',
-            alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Ionicons name="settings-outline" size={16} color="#fff" />
-          </View>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
-
   useFocusEffect(
     useCallback(() => {
       // Load immediately on focus (e.g., returning from chat page)
       loadConversations();
-      // Auto-refresh every 5 seconds for new messages
-      intervalRef.current = setInterval(loadConversations, 5000);
+      // Auto-refresh every 15 seconds for new messages
+      intervalRef.current = setInterval(loadConversations, 15000);
       return () => {
         if (intervalRef.current) clearInterval(intervalRef.current);
       };
@@ -106,12 +86,12 @@ export default function ChatListPage() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <View style={[styles.emptyIcon, { backgroundColor: theme.bgTertiary }]}><Ionicons name="chatbubbles-outline" size={48} color={theme.textTertiary} /></View>
-            <Text style={[styles.emptyTitle, { color: theme.textPrimary }]}>暂无对话</Text>
+            <SparkleText text="暂无对话" style={[styles.emptyTitle, { color: theme.textPrimary }]} />
             <Text style={[styles.emptySub, { color: theme.textSecondary }]}>去「角色」页面创建角色开始聊天吧 ✨</Text>
           </View>
         }
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingTop: 96, paddingBottom: 100 }}
       />
     </View>
   );

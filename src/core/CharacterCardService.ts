@@ -183,6 +183,7 @@ export const CharacterCardService = {
         coverUri: null,
         signature: card.persona.signature,
         chatBackgroundUri: null,
+        chatBackgroundOpacity: 0.15,
         speakingStyle: card.persona.speakingStyle || '',
         tabooTopics: card.persona.tabooTopics || '',
         likes: card.persona.likes || '',

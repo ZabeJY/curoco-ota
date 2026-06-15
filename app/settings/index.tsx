@@ -12,23 +12,31 @@ import * as Updates from 'expo-updates';
 import { useSettingsStore } from '../../src/store/settingsStore';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import Slider from '../../src/components/common/Slider';
+import GlassModal from '../../src/components/common/GlassModal';
+import GlassButton from '../../src/components/common/GlassButton';
+import SparkleText from '../../src/components/common/SparkleText';
 import { CloudSyncService } from '../../src/core/CloudSyncService';
 import { registerForPushNotifications, getStoredPushToken } from '../../src/core/PushNotificationManager';
 
-const CURRENT_VERSION = '1.8.1';
+const CURRENT_VERSION = '1.8.2';
 const VERSION_UPDATE_NOTES = [
-  '修复消息列表点击闪退',
-  '修复动态卡片交互失效',
-  '修复动态详情页双顶栏',
-  '卡片3D倾斜：长按+拖动触发',
-  '打赏页面全新设计',
-  '6个UI设计组件应用',
-  '开屏动画闪光效果',
-  '法律声明可滚动弹窗',
-  '日历网格布局优化',
-  '语音通话光束动画背景',
-  '移除FlashList依赖，优化体积',
-  '全局Header透明风格统一',
+  '设计方案全面适配：8个弹窗替换为GlassModal',
+  '新建SparkleText闪光文字组件',
+  'GlassButton按钮组件全页面应用',
+  '空状态标题添加闪光粒子效果',
+  '用户签名添加闪光动效',
+  '法律声明弹窗关闭按钮移除',
+  '法律声明弹窗支持滚动查看',
+  '打赏页面商品名称优化',
+  '打赏页面移除扫码备注提示',
+  '我的页面签名位置调整',
+  '我的页面封底下移优化',
+  '消息列表/角色页设置按钮移除',
+  '透明顶栏内容重叠修复',
+  '聊天背景透明度滑条',
+  '菜单动画流畅度优化',
+  'App性能优化：轮询间隔+React.memo',
+  'TypeScript编译错误修复',
 ];
 
 export default function SettingsPage() {
@@ -399,7 +407,7 @@ export default function SettingsPage() {
       <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>关于</Text>
       <View style={[styles.card, { backgroundColor: theme.bgSecondary }]}>
         <View style={styles.aboutLogoRow}>
-          <Text style={[styles.aboutName, { color: theme.textPrimary }]}>Curoco</Text>
+          <SparkleText text="Curoco" style={[styles.aboutName, { color: theme.textPrimary }]} sparklesCount={6} />
         </View>
         <InfoRow label="版本" value={`v${CURRENT_VERSION}`} theme={theme} />
         <InfoRow label="项目" value="Curoco AI Companion" theme={theme} />
@@ -466,24 +474,19 @@ export default function SettingsPage() {
     </ScrollView>
 
     {/* Legal Dialog Modal */}
-    <Modal visible={!!legalDialog} transparent animationType="fade" onRequestClose={() => setLegalDialog(null)}>
-      <TouchableOpacity style={legalStyles.overlay} activeOpacity={1} onPress={() => setLegalDialog(null)}>
-        <View style={[legalStyles.content, { backgroundColor: theme.bgSecondary }]}>
-          <View style={legalStyles.header}>
-            <Text style={[legalStyles.title, { color: theme.textPrimary }]}>{legalDialog?.title}</Text>
-            <TouchableOpacity onPress={() => setLegalDialog(null)} style={legalStyles.closeBtn}>
-              <Ionicons name="close" size={20} color={theme.textTertiary} />
-            </TouchableOpacity>
-          </View>
-          <ScrollView style={legalStyles.body} showsVerticalScrollIndicator={false}>
-            <Text style={[legalStyles.text, { color: theme.textSecondary }]}>{legalDialog?.content}</Text>
-          </ScrollView>
-          <TouchableOpacity style={[legalStyles.footer, { backgroundColor: theme.primary }]} onPress={() => setLegalDialog(null)}>
-            <Text style={legalStyles.footerText}>我知道了</Text>
-          </TouchableOpacity>
+    <GlassModal visible={!!legalDialog} onClose={() => setLegalDialog(null)} scrollable>
+      <View style={{ backgroundColor: theme.bgSecondary, borderRadius: 20, overflow: 'hidden' }}>
+        <View style={legalStyles.header}>
+          <Text style={[legalStyles.title, { color: theme.textPrimary }]}>{legalDialog?.title}</Text>
         </View>
-      </TouchableOpacity>
-    </Modal>
+        <View style={legalStyles.body}>
+          <Text style={[legalStyles.text, { color: theme.textSecondary }]}>{legalDialog?.content}</Text>
+        </View>
+        <TouchableOpacity style={[legalStyles.footer, { backgroundColor: theme.primary }]} onPress={() => setLegalDialog(null)}>
+          <Text style={legalStyles.footerText}>我知道了</Text>
+        </TouchableOpacity>
+      </View>
+    </GlassModal>
     </>
   );
 }
@@ -576,23 +579,13 @@ const styles = StyleSheet.create({
 });
 
 const legalStyles = StyleSheet.create({
-  overlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center', alignItems: 'center', padding: 24,
-  },
-  content: {
-    width: '100%', maxHeight: '80%', borderRadius: 20, overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15, shadowRadius: 24, elevation: 12,
-  },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12,
     borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.06)',
   },
   title: { fontSize: 17, fontWeight: '700', flex: 1 },
-  closeBtn: { padding: 4 },
-  body: { paddingHorizontal: 20, paddingVertical: 16, maxHeight: 400 },
+  body: { paddingHorizontal: 20, paddingVertical: 16 },
   text: { fontSize: 13, lineHeight: 22 },
   footer: {
     marginHorizontal: 20, marginBottom: 20, borderRadius: 14,

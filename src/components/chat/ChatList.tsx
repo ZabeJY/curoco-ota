@@ -18,7 +18,7 @@ interface ChatListItemProps {
   onPress: () => void;
 }
 
-export default function ChatListItem({
+export default React.memo(function ChatListItem({
   companionName, avatarUri, lastMessage, lastMessageAt, unreadCount, onPress,
 }: ChatListItemProps) {
   const { theme } = useTheme();
@@ -38,7 +38,7 @@ export default function ChatListItem({
       </View>
     </TouchableOpacity>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

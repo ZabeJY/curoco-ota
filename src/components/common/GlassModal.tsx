@@ -6,7 +6,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import {
-  View, StyleSheet, Modal, TouchableOpacity, Animated, Dimensions,
+  View, StyleSheet, Modal, TouchableOpacity, Animated, Dimensions, ScrollView,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '../../theme/ThemeProvider';
@@ -21,9 +21,11 @@ interface GlassModalProps {
   align?: 'center' | 'bottom';
   /** Additional style for the card */
   cardStyle?: any;
+  /** Make content scrollable */
+  scrollable?: boolean;
 }
 
-export default function GlassModal({ visible, onClose, children, align = 'center', cardStyle }: GlassModalProps) {
+export default function GlassModal({ visible, onClose, children, align = 'center', cardStyle, scrollable = false }: GlassModalProps) {
   const { theme, isDark } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.92)).current;
@@ -68,7 +70,13 @@ export default function GlassModal({ visible, onClose, children, align = 'center
               ]}
             >
               <BlurView intensity={isDark ? 40 : 60} tint={tint} style={StyleSheet.absoluteFill} />
-              <View style={styles.content}>{children}</View>
+              <View style={styles.content}>
+                {scrollable ? (
+                  <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                    {children}
+                  </ScrollView>
+                ) : children}
+              </View>
             </Animated.View>
           </TouchableOpacity>
         </TouchableOpacity>
@@ -89,4 +97,5 @@ const styles = StyleSheet.create({
   },
   cardBottom: { alignSelf: 'center', marginTop: 'auto', marginBottom: 40 },
   content: { position: 'relative', zIndex: 1 },
+  scrollContent: { maxHeight: 400 },
 });

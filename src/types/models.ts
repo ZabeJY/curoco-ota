@@ -29,6 +29,7 @@ export interface Companion {
   coverUri: string | null;
   signature: string | null;
   chatBackgroundUri: string | null;
+  chatBackgroundOpacity: number;
   // 细化设定字段
   speakingStyle: string;   // 语言特点/说话风格
   tabooTopics: string;     // 禁忌话题

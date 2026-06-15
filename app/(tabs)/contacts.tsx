@@ -2,17 +2,19 @@
  * Curoco — Contacts (Redesigned)
  */
 
-import React, { useCallback, useState, useRef, useLayoutEffect } from 'react';
+import React, { useCallback, useState, useRef } from 'react';
 import {
   View, FlatList, TouchableOpacity, Text, StyleSheet, Alert,
-  ActivityIndicator, Platform, Modal, Animated,
+  ActivityIndicator, Modal, Animated,
 } from 'react-native';
 import TiltCard from '../../src/components/common/TiltCard';
-import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Avatar from '../../src/components/common/Avatar';
+import GlassModal from '../../src/components/common/GlassModal';
+import SparkleText from '../../src/components/common/SparkleText';
 import { useCompanionStore } from '../../src/store/companionStore';
 import { useTheme } from '../../src/theme/ThemeProvider';
 import { ConversationRepository } from '../../src/db/repositories/ConversationRepo';
@@ -20,55 +22,17 @@ import type { Companion } from '../../src/types/models';
 
 export default function ContactsPage() {
   const router = useRouter();
-  const navigation = useNavigation();
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const { companions, loadCompanions, deleteCompanion } = useCompanionStore();
   const [navId, setNavId] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [menuCompanion, setMenuCompanion] = useState<Companion | null>(null);
-  const menuFade = useRef(new Animated.Value(0)).current;
-  const menuSlide = useRef(new Animated.Value(40)).current;
 
   // Tab bar: height 64 + marginBottom 10 + safe area bottom
   const TAB_BAR_TOTAL = 64 + 10 + insets.bottom;
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <TouchableOpacity
-          onPress={() => router.push('/settings')}
-          style={{ marginRight: 16 }}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          <View style={{
-            width: 32, height: 32, borderRadius: 16,
-            backgroundColor: 'rgba(0,0,0,0.25)',
-            alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Ionicons name="settings-outline" size={16} color="#fff" />
-          </View>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation]);
-
   useFocusEffect(useCallback(() => { loadCompanions(); }, []));
-
-  function showMenu(c: Companion) {
-    setMenuCompanion(c);
-    Animated.parallel([
-      Animated.timing(menuFade, { toValue: 1, duration: 200, useNativeDriver: true }),
-      Animated.spring(menuSlide, { toValue: 0, friction: 8, tension: 80, useNativeDriver: true }),
-    ]).start();
-  }
-
-  function hideMenu() {
-    Animated.parallel([
-      Animated.timing(menuFade, { toValue: 0, duration: 150, useNativeDriver: true }),
-      Animated.timing(menuSlide, { toValue: 40, duration: 150, useNativeDriver: true }),
-    ]).start(() => setMenuCompanion(null));
-  }
 
   async function handlePress(c: Companion) {
     if (navId) return;
@@ -84,7 +48,7 @@ export default function ContactsPage() {
   function handleMenuAction(action: string) {
     if (!menuCompanion) return;
     const c = menuCompanion;
-    hideMenu();
+    setMenuCompanion(null);
     setTimeout(() => {
       switch (action) {
         case 'chat': handlePress(c); break;
@@ -109,7 +73,7 @@ export default function ContactsPage() {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TiltCard containerStyle={{ marginBottom: 2 }}>
-            <TouchableOpacity style={styles.item} onPress={() => handlePress(item)} onLongPress={() => showMenu(item)} activeOpacity={0.6}>
+            <TouchableOpacity style={styles.item} onPress={() => handlePress(item)} onLongPress={() => setMenuCompanion(item)} activeOpacity={0.6}>
               <Avatar uri={item.avatarUri} name={item.name} size="md" />
               <View style={styles.itemBody}>
                 <Text style={[styles.name, { color: theme.textPrimary }]}>{item.name}</Text>
@@ -124,12 +88,12 @@ export default function ContactsPage() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <View style={[styles.emptyIcon, { backgroundColor: theme.bgTertiary }]}><Ionicons name="people-outline" size={48} color={theme.textTertiary} /></View>
-            <Text style={[styles.emptyTitle, { color: theme.textPrimary }]}>还没有角色</Text>
+            <SparkleText text="还没有角色" style={[styles.emptyTitle, { color: theme.textPrimary }]} />
             <Text style={[styles.emptySub, { color: theme.textSecondary }]}>点击右下角 + 创建一个</Text>
           </View>
         }
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingTop: 96, paddingBottom: 100 }}
       />
       <TouchableOpacity style={[styles.fabImport, { bottom: TAB_BAR_TOTAL + 152 }]} onPress={() => router.push('/chat/create-group')} activeOpacity={0.8}>
         <Ionicons name="people" size={22} color="#FF9500" />
@@ -157,43 +121,36 @@ export default function ContactsPage() {
       </TouchableOpacity>
 
       {/* Long-press action menu */}
-      <Modal visible={!!menuCompanion} transparent animationType="none" onRequestClose={hideMenu}>
-        <Animated.View style={[styles.menuOverlay, { opacity: menuFade }]}>
-          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={hideMenu}>
-            <Animated.View style={[styles.menuBox, { transform: [{ translateY: menuSlide }] }]}>
-              <BlurView intensity={60} tint="light" style={StyleSheet.absoluteFill} />
-              <View style={styles.menuContent}>
-                <Text style={styles.menuTitle}>{menuCompanion?.name}</Text>
-                <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('chat')} activeOpacity={0.6}>
-                  <Ionicons name="chatbubble-outline" size={20} color="#6C63FF" />
-                  <Text style={styles.menuItemText}>开始聊天</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('settings')} activeOpacity={0.6}>
-                  <Ionicons name="settings-outline" size={20} color="#6C63FF" />
-                  <Text style={styles.menuItemText}>角色设置</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('edit')} activeOpacity={0.6}>
-                  <Ionicons name="create-outline" size={20} color="#6C63FF" />
-                  <Text style={styles.menuItemText}>编辑全部</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('persona')} activeOpacity={0.6}>
-                  <Ionicons name="person-outline" size={20} color="#6C63FF" />
-                  <Text style={styles.menuItemText}>编辑人设</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('detail')} activeOpacity={0.6}>
-                  <Ionicons name="information-circle-outline" size={20} color="#6C63FF" />
-                  <Text style={styles.menuItemText}>查看详情</Text>
-                </TouchableOpacity>
-                <View style={styles.menuDivider} />
-                <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('delete')} activeOpacity={0.6}>
-                  <Ionicons name="trash-outline" size={20} color="#FF4757" />
-                  <Text style={[styles.menuItemText, { color: '#FF4757' }]}>删除角色</Text>
-                </TouchableOpacity>
-              </View>
-            </Animated.View>
+      <GlassModal visible={!!menuCompanion} onClose={() => setMenuCompanion(null)} align="center">
+        <View style={styles.menuContent}>
+          <Text style={styles.menuTitle}>{menuCompanion?.name}</Text>
+          <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('chat')} activeOpacity={0.6}>
+            <Ionicons name="chatbubble-outline" size={20} color="#6C63FF" />
+            <Text style={styles.menuItemText}>开始聊天</Text>
           </TouchableOpacity>
-        </Animated.View>
-      </Modal>
+          <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('settings')} activeOpacity={0.6}>
+            <Ionicons name="settings-outline" size={20} color="#6C63FF" />
+            <Text style={styles.menuItemText}>角色设置</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('edit')} activeOpacity={0.6}>
+            <Ionicons name="create-outline" size={20} color="#6C63FF" />
+            <Text style={styles.menuItemText}>编辑全部</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('persona')} activeOpacity={0.6}>
+            <Ionicons name="person-outline" size={20} color="#6C63FF" />
+            <Text style={styles.menuItemText}>编辑人设</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('detail')} activeOpacity={0.6}>
+            <Ionicons name="information-circle-outline" size={20} color="#6C63FF" />
+            <Text style={styles.menuItemText}>查看详情</Text>
+          </TouchableOpacity>
+          <View style={styles.menuDivider} />
+          <TouchableOpacity style={styles.menuItem} onPress={() => handleMenuAction('delete')} activeOpacity={0.6}>
+            <Ionicons name="trash-outline" size={20} color="#FF4757" />
+            <Text style={[styles.menuItemText, { color: '#FF4757' }]}>删除角色</Text>
+          </TouchableOpacity>
+        </View>
+      </GlassModal>
     </View>
   );
 }
@@ -219,13 +176,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 3,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)',
   },
-  // Menu modal
-  menuOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' },
-  menuBox: {
-    width: 240, borderRadius: 20, overflow: 'hidden',
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.12, shadowRadius: 24, elevation: 12,
-  },
+  // Menu
   menuContent: { padding: 8 },
   menuTitle: { fontSize: 15, fontWeight: '600', color: '#1A1A2E', textAlign: 'center', paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E8E8EA' },
   menuItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 16 },

@@ -5,9 +5,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, Modal, TextInput, Alert,
+  View, Text, TouchableOpacity, StyleSheet, TextInput, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import GlassModal from '../common/GlassModal';
 import { HabitRepository, type HabitWithStreak } from '../../db/repositories/HabitRepository';
 import type { Theme } from '../../theme/colors';
 
@@ -226,60 +227,58 @@ export default function HabitTracker({ theme }: HabitTrackerProps) {
       </View>
 
       {/* Add Modal */}
-      <Modal visible={showAdd} transparent animationType="fade" onRequestClose={() => setShowAdd(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: theme.bgSecondary }]}>
-            <Text style={[styles.modalTitle, { color: theme.textPrimary }]}>新建打卡</Text>
+      <GlassModal visible={showAdd} onClose={() => setShowAdd(false)}>
+        <View style={{ padding: 8 }}>
+          <Text style={[styles.modalTitle, { color: theme.textPrimary }]}>新建打卡</Text>
 
-            <TextInput
-              style={[styles.modalInput, { color: theme.textPrimary, borderColor: theme.border, backgroundColor: theme.bgInput }]}
-              value={newName}
-              onChangeText={setNewName}
-              placeholder="打卡名称（如：喝水、运动）"
-              placeholderTextColor={theme.textTertiary}
-              maxLength={20}
-              autoFocus
-            />
+          <TextInput
+            style={[styles.modalInput, { color: theme.textPrimary, borderColor: theme.border, backgroundColor: theme.bgInput }]}
+            value={newName}
+            onChangeText={setNewName}
+            placeholder="打卡名称（如：喝水、运动）"
+            placeholderTextColor={theme.textTertiary}
+            maxLength={20}
+            autoFocus
+          />
 
-            <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>图标</Text>
-            <View style={styles.iconGrid}>
-              {ICONS.map((icon) => (
-                <TouchableOpacity
-                  key={icon}
-                  style={[styles.iconItem, { borderColor: 'transparent' }, newIcon === icon && { backgroundColor: theme.primaryLight, borderColor: theme.primary }]}
-                  onPress={() => setNewIcon(icon)}
-                >
-                  <Text style={styles.iconEmoji}>{icon}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>颜色</Text>
-            <View style={styles.colorGrid}>
-              {COLORS.map((color) => (
-                <TouchableOpacity
-                  key={color}
-                  style={[styles.colorItem, { backgroundColor: color }, newColor === color && styles.colorSelected]}
-                  onPress={() => setNewColor(color)}
-                />
-              ))}
-            </View>
-
-            <View style={styles.modalBtns}>
-              <TouchableOpacity style={styles.modalCancel} onPress={() => setShowAdd(false)}>
-                <Text style={[styles.modalCancelText, { color: theme.textTertiary }]}>取消</Text>
-              </TouchableOpacity>
+          <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>图标</Text>
+          <View style={styles.iconGrid}>
+            {ICONS.map((icon) => (
               <TouchableOpacity
-                style={[styles.modalConfirm, { backgroundColor: theme.primary, opacity: newName.trim() ? 1 : 0.4 }]}
-                onPress={handleAdd}
-                disabled={!newName.trim()}
+                key={icon}
+                style={[styles.iconItem, { borderColor: 'transparent' }, newIcon === icon && { backgroundColor: theme.primaryLight, borderColor: theme.primary }]}
+                onPress={() => setNewIcon(icon)}
               >
-                <Text style={styles.modalConfirmText}>创建</Text>
+                <Text style={styles.iconEmoji}>{icon}</Text>
               </TouchableOpacity>
-            </View>
+            ))}
+          </View>
+
+          <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>颜色</Text>
+          <View style={styles.colorGrid}>
+            {COLORS.map((color) => (
+              <TouchableOpacity
+                key={color}
+                style={[styles.colorItem, { backgroundColor: color }, newColor === color && styles.colorSelected]}
+                onPress={() => setNewColor(color)}
+              />
+            ))}
+          </View>
+
+          <View style={styles.modalBtns}>
+            <TouchableOpacity style={styles.modalCancel} onPress={() => setShowAdd(false)}>
+              <Text style={[styles.modalCancelText, { color: theme.textTertiary }]}>取消</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalConfirm, { backgroundColor: theme.primary, opacity: newName.trim() ? 1 : 0.4 }]}
+              onPress={handleAdd}
+              disabled={!newName.trim()}
+            >
+              <Text style={styles.modalConfirmText}>创建</Text>
+            </TouchableOpacity>
           </View>
         </View>
-      </Modal>
+      </GlassModal>
     </View>
   );
 }
@@ -319,8 +318,6 @@ const styles = StyleSheet.create({
   calDayDots: { flexDirection: 'row', gap: 2 },
   calDot: { width: 5, height: 5, borderRadius: 2.5 },
   // Modal
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 32 },
-  modalCard: { width: '100%', borderRadius: 24, padding: 24, shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.08, shadowRadius: 24, elevation: 12 },
   modalTitle: { fontSize: 18, fontWeight: '700', marginBottom: 16 },
   modalInput: { fontSize: 15, borderRadius: 14, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 12, marginBottom: 16 },
   pickerLabel: { fontSize: 12, fontWeight: '500', marginBottom: 8 },

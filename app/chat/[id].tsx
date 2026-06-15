@@ -51,6 +51,7 @@ export default function ChatPage() {
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [quoteMessage, setQuoteMessage] = useState<{ id: string; content: string; role: string } | null>(null);
   const [chatBgUri, setChatBgUri] = useState<string | null>(null);
+  const [chatBgOpacity, setChatBgOpacity] = useState(0.15);
   const { deleteCompanion } = useCompanionStore();
   const insets = useSafeAreaInsets();
   const menuFadeAnim = useRef(new Animated.Value(0)).current;
@@ -60,13 +61,13 @@ export default function ChatPage() {
   useEffect(() => {
     if (showMenu) {
       Animated.parallel([
-        Animated.timing(menuFadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }),
-        Animated.timing(menuSlideAnim, { toValue: 0, duration: 250, useNativeDriver: true }),
+        Animated.timing(menuFadeAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
+        Animated.timing(menuSlideAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
       ]).start();
     } else {
       Animated.parallel([
-        Animated.timing(menuFadeAnim, { toValue: 0, duration: 150, useNativeDriver: true }),
-        Animated.timing(menuSlideAnim, { toValue: 20, duration: 150, useNativeDriver: true }),
+        Animated.timing(menuFadeAnim, { toValue: 0, duration: 120, useNativeDriver: true }),
+        Animated.timing(menuSlideAnim, { toValue: 20, duration: 120, useNativeDriver: true }),
       ]).start();
     }
   }, [showMenu]);
@@ -125,7 +126,10 @@ export default function ChatPage() {
   useEffect(() => {
     if (companionId) {
       CompanionRepository.getById(companionId).then(c => {
-        if (c?.chatBackgroundUri) setChatBgUri(c.chatBackgroundUri);
+        if (c?.chatBackgroundUri) {
+          setChatBgUri(c.chatBackgroundUri);
+          setChatBgOpacity(c.chatBackgroundOpacity ?? 0.15);
+        }
       }).catch(() => {});
     }
   }, [companionId]);
@@ -204,7 +208,7 @@ export default function ChatPage() {
     >
       {/* Chat Background */}
       {chatBgUri ? (
-        <Image source={{ uri: chatBgUri }} style={styles.chatBgImage} resizeMode="cover" />
+        <Image source={{ uri: chatBgUri }} style={[styles.chatBgImage, { opacity: chatBgOpacity }]} resizeMode="cover" />
       ) : null}
       {/* Messages — flex:1 so it fills space above input */}
       <FlatList
@@ -306,7 +310,6 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   chatBgImage: {
     ...StyleSheet.absoluteFillObject,
-    opacity: 0.15,
   },
   // FlashList MUST have flex:1 to fill space and enable scrolling
   msgList: { flex: 1 },

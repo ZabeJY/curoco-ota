@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useCompanionStore } from '../../src/store/companionStore';
+import GlassButton from '../../src/components/common/GlassButton';
 
 export default function CreateCompanionPage() {
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function CreateCompanionPage() {
         voiceEnabled, proactiveMessageEnabled: proactive,
         proactiveMessageIntervalMin: 4, proactiveMessageIntervalMax: 12,
         ttsVoiceId: null, ttsVoiceSampleUri: null,
-        coverUri: null, signature: null, chatBackgroundUri: null,
+        coverUri: null, signature: null, chatBackgroundUri: null, chatBackgroundOpacity: 0.15,
         autoFollowUpEnabled: false, autoFollowUpTimeoutMin: 30,
         speakingStyle: speakingStyle.trim(),
         tabooTopics: tabooTopics.trim(),
@@ -104,9 +105,13 @@ export default function CreateCompanionPage() {
         <SwitchRow label="主动消息" hint="在你没说话时主动问候" value={proactive} onChange={setProactive} />
       </View>
 
-      <TouchableOpacity style={[styles.createBtn, saving && { opacity: 0.6 }]} onPress={handleCreate} disabled={saving}>
-        {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.createBtnText}>创建角色</Text>}
-      </TouchableOpacity>
+      <GlassButton
+        label={saving ? '创建中...' : '创建角色'}
+        onPress={handleCreate}
+        variant="primary"
+        disabled={saving}
+        style={{ marginTop: 20 }}
+      />
     </ScrollView>
   );
 }
