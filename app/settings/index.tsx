@@ -15,16 +15,19 @@ import Slider from '../../src/components/common/Slider';
 import { CloudSyncService } from '../../src/core/CloudSyncService';
 import { registerForPushNotifications, getStoredPushToken } from '../../src/core/PushNotificationManager';
 
-const CURRENT_VERSION = '1.7.6';
+const CURRENT_VERSION = '1.8.0';
 const VERSION_UPDATE_NOTES = [
-  '生活打卡：自定义习惯+每日签到+月历视图',
-  '群聊功能：多角色对话，@触发特定角色',
-  '语音通话：VAD灵敏度+静音超时可调',
-  '表情包网络搜索：GIPHY集成',
-  '我的页面重构：头像半叠+去除用户名字',
-  'Space封面放大',
-  'FlashList性能+expo-image缓存',
-  'ASR测试格式修复',
+  '修复消息列表点击闪退问题',
+  '修复动态卡片交互失效问题',
+  '修复动态详情页无法打开问题',
+  '修复版本号显示错误',
+  '修复我的页面用户名误显示问题',
+  '优化签名显示位置',
+  '3D卡片微交互组件：TiltCard',
+  '远程推送通知：Expo Push Notifications',
+  '用户签名：个人资料编辑+角色感知',
+  '自定义聊天背景：角色设置上传+半透明显示',
+  '动态知识打通：角色感知用户Space动态',
 ];
 
 export default function SettingsPage() {

@@ -27,7 +27,7 @@ export default function TiltCard({ children, style, containerStyle, disabled = f
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => !disabled,
+      onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: () => !disabled,
       onPanResponderGrant: () => {
         Animated.spring(scale, { toValue: 1.02, friction: 8, tension: 100, useNativeDriver: true }).start();

@@ -255,15 +255,16 @@
 3. 应用场景：contacts角色卡片、discover动态卡片、post详情卡片、donate档位卡片
 
 ## v1.7.10 更新内容
-1. 修复构建失败：降级expo-background-fetch/expo-task-manager至SDK52兼容版本
+1. 修复构建失败：移除不兼容的expo-background-fetch/expo-task-manager
 2. 修复语音合成报错：ProactiveManager中TTS model默认值错误导致400
-3. 修复TypeScript编译错误：FlashList类型兼容+TiltCard导入修复
+3. 修复TypeScript编译错误：FlashList类型兼容
 4. 安装@shopify/flash-list依赖
+5. 3D卡片微交互组件：TiltCard（触摸倾斜+弹性回弹）
 
 ## 当前开发状态（供下次对话参考）
 
 ### 最新版本
-- **v1.7.10** 已提交
+- **v1.7.10** 构建中
 
 ### 本次会话完成的工作
 1. ✅ OTA热更新修复：统一eas.json URL为curoco-ota
@@ -318,7 +319,19 @@
 - 长消息分段：ResponseParser.splitLongMessage阈值25字，分组上限50字
 - Prompt要求：每条消息15-20字，至少拆成2-4条发送
 - **远程推送**：Expo Push Notifications，免费无限制，PushToken存数据库
-- **后台运行**：expo-task-manager+expo-background-fetch，15分钟间隔
+- **后台运行**：仅AppState监听，expo-task-manager/expo-background-fetch与SDK52不兼容已移除
 - **用户签名**：PersonaConfig.userSignature，PromptBuilder注入系统提示词
 - **动态知识**：SocialRepo.getFeed注入MessageEngine系统提示词
 - **聊天背景**：Companion.chatBackgroundUri，Image组件半透明覆盖
+
+### 已知待解决问题（供下次对话参考）
+- 用户反馈：v1.7.6升级到v1.7.10后很多地方未达到预想，需要逐一排查
+- 可能的问题方向：
+  1. UI改动可能过于激进，破坏了用户习惯的交互方式
+  2. 3D卡片倾斜效果在移动端可能体验不佳（触摸vs鼠标）
+  3. 打赏页面/法律声明页面的展示形式（Alert弹窗 vs 独立页面）可能不符合预期
+  4. 聊天背景半透明效果可能太淡或太浓
+  5. 签名功能的角色反应可能不够自然
+  6. 动态知识注入可能导致角色回复变得啰嗦
+  7. 远程推送在部分设备上可能不生效（需EAS项目配置）
+- 下次对话建议：先让用户逐一说明每个不满意的具体表现，再针对性修复

@@ -524,7 +524,7 @@ export default function DiscoverPage() {
     const isOwnPost = item.author_id === 'user';
 
     const card = (
-      <TiltCard>
+      <TiltCard disabled>
       <View style={styles.card}>
         {/* Header */}
         <View style={styles.cardHeader}>

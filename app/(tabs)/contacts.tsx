@@ -87,7 +87,7 @@ export default function ContactsPage() {
         data={companions}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TiltCard containerStyle={{ marginBottom: 2 }}>
+          <TiltCard containerStyle={{ marginBottom: 2 }} disabled>
             <TouchableOpacity style={styles.item} onPress={() => handlePress(item)} onLongPress={() => showMenu(item)} activeOpacity={0.6}>
               <Avatar uri={item.avatarUri} name={item.name} size="md" />
               <View style={styles.itemBody}>

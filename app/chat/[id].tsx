@@ -7,8 +7,9 @@
 import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import {
   View, StyleSheet, KeyboardAvoidingView, Platform,
-  ActivityIndicator, Text, TouchableOpacity, Keyboard, Alert, Modal, Animated, Image,
+  ActivityIndicator, Text, TouchableOpacity, Keyboard, Alert, Modal, Animated,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { FlashList } from '@shopify/flash-list';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -230,6 +231,7 @@ export default function ChatPage() {
         )}
         contentContainerStyle={styles.msgContent}
         style={styles.msgList}
+        estimatedItemSize={80}
         showsVerticalScrollIndicator={false}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"

@@ -162,13 +162,12 @@ export default function ProfilePage() {
             </View>
           </View>
 
-          {/* User Info — name + signature */}
-          <View style={styles.userInfoSection}>
-            <Text style={[styles.userName, { color: theme.textPrimary }]}>{settings.userName || '我'}</Text>
-            {settings.userSignature ? (
+          {/* User Signature — below cover, aligned with avatar */}
+          {settings.userSignature ? (
+            <View style={styles.signatureWrap}>
               <Text style={[styles.userSignature, { color: theme.textSecondary }]}>{settings.userSignature}</Text>
-            ) : null}
-          </View>
+            </View>
+          ) : null}
 
           {/* Photo Wall */}
           {recentPosts.length > 0 && (
@@ -268,11 +267,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   // User Info
-  userInfoSection: {
-    paddingHorizontal: 20, marginTop: 8, marginBottom: 16,
-  },
-  userName: {
-    fontSize: 20, fontWeight: '700', marginBottom: 4,
+  signatureWrap: {
+    paddingHorizontal: 20, marginTop: 4, marginBottom: 8,
   },
   userSignature: {
     fontSize: 13, lineHeight: 18, fontStyle: 'italic',

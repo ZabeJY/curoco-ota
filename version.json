@@ -1,8 +1,8 @@
 {
-  "version": "1.7.10",
-  "versionCode": 19,
-  "downloadUrl": "https://github.com/ZabeJY/curoco/releases/download/v1.7.10/Curoco_v1.7.10.apk",
+  "version": "1.8.0",
+  "versionCode": 20,
+  "downloadUrl": "https://github.com/ZabeJY/curoco/releases/download/v1.8.0/Curoco_v1.8.0.apk",
   "changelog": [
-    "v1.7.10: 修复构建失败+TTS报错"
+    "v1.8.0: 修复消息列表闪退、动态卡片交互失效、动态详情页导航、版本号显示错误、我的页面用户名误显示、签名位置优化"
   ]
 }

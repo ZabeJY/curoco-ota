@@ -20,7 +20,7 @@ import type { SocialComment, PostWithMeta } from '../../src/types/social';
 import type { Companion } from '../../src/types/models';
 
 export default function PostDetailScreen() {
-  const { postId } = useLocalSearchParams<{ postId: string }>();
+  const { id: postId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { settings } = useSettingsStore();
 
@@ -156,7 +156,7 @@ export default function PostDetailScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Post */}
-        <TiltCard>
+        <TiltCard disabled>
         <View style={styles.postCard}>
           <View style={styles.postHeader}>
             <Avatar uri={post.author_avatar_uri || null} name={post.author_name} size="md" />
