@@ -16,6 +16,7 @@ import { BlurView } from 'expo-blur';
 import * as FileSystem from 'expo-file-system';
 import { Audio } from 'expo-av';
 import Avatar from '../../src/components/common/Avatar';
+import BeamsBackground from '../../src/components/common/BeamsBackground';
 import { CompanionRepository } from '../../src/db/repositories/CompanionRepository';
 import { MessageRepository } from '../../src/db/repositories/MessageRepository';
 import { ConversationRepository } from '../../src/db/repositories/ConversationRepo';
@@ -487,9 +488,7 @@ export default function VoiceCallScreen() {
       <View style={styles.bg}>
         <View style={styles.bgLayer1} />
         <View style={styles.bgLayer2} />
-        <View style={styles.bgOrb1} />
-        <View style={styles.bgOrb2} />
-        <View style={styles.bgOrb3} />
+        <BeamsBackground />
       </View>
 
       <Animated.View style={[styles.container, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>

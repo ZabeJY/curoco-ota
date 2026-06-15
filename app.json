@@ -2,7 +2,7 @@
   "expo": {
     "name": "Curoco",
     "slug": "curoco",
-    "version": "1.8.0",
+    "version": "1.8.1",
     "orientation": "portrait",
     "icon": "./reallogo.png",
     "userInterfaceStyle": "automatic",
@@ -23,7 +23,7 @@
       },
       "package": "com.curoco.app",
       "softwareKeyboardLayoutMode": "resize",
-      "versionCode": 20
+      "versionCode": 21
     },
     "web": {
       "favicon": "./reallogo.png",

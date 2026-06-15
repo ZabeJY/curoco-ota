@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { SoundManager } from '../../utils/SoundManager';
 import { useTheme } from '../../theme/ThemeProvider';
+import ImageViewer from '../common/ImageViewer';
 import type { DisplayMessage } from '../../types/message';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -79,6 +80,7 @@ export default function ChatBubble({ message, isGroupChat, companionName, isHigh
   const [transcription, setTranscription] = useState<string | null>(null);
   const [showTranscription, setShowTranscription] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
   const waveHeights = useMemo(() => Array.from({ length: 12 }, () => 4 + Math.random() * 12), []);
 
   // Highlight animation for search result navigation
@@ -357,6 +359,7 @@ export default function ChatBubble({ message, isGroupChat, companionName, isHigh
           ref={bubbleRef}
           style={[styles.row, isSelf ? styles.rowSelf : styles.rowOther]}
           onLongPress={handleLongPress}
+          onPress={() => message.mediaUri && setViewingImage(message.mediaUri)}
           activeOpacity={0.8}
         >
           <View style={[styles.imageBubble, { backgroundColor: bubbleBg }]}>
@@ -366,6 +369,7 @@ export default function ChatBubble({ message, isGroupChat, companionName, isHigh
             )}
           </View>
         </TouchableOpacity>
+        <ImageViewer visible={!!viewingImage} uri={viewingImage || ''} onClose={() => setViewingImage(null)} />
         {renderContextMenu()}
       </>
     );

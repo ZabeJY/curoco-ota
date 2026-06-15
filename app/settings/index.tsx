@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Linking, ActivityIndicator, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Linking, ActivityIndicator, Animated, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -15,19 +15,20 @@ import Slider from '../../src/components/common/Slider';
 import { CloudSyncService } from '../../src/core/CloudSyncService';
 import { registerForPushNotifications, getStoredPushToken } from '../../src/core/PushNotificationManager';
 
-const CURRENT_VERSION = '1.8.0';
+const CURRENT_VERSION = '1.8.1';
 const VERSION_UPDATE_NOTES = [
-  '修复消息列表点击闪退问题',
-  '修复动态卡片交互失效问题',
-  '修复动态详情页无法打开问题',
-  '修复版本号显示错误',
-  '修复我的页面用户名误显示问题',
-  '优化签名显示位置',
-  '3D卡片微交互组件：TiltCard',
-  '远程推送通知：Expo Push Notifications',
-  '用户签名：个人资料编辑+角色感知',
-  '自定义聊天背景：角色设置上传+半透明显示',
-  '动态知识打通：角色感知用户Space动态',
+  '修复消息列表点击闪退',
+  '修复动态卡片交互失效',
+  '修复动态详情页双顶栏',
+  '卡片3D倾斜：长按+拖动触发',
+  '打赏页面全新设计',
+  '6个UI设计组件应用',
+  '开屏动画闪光效果',
+  '法律声明可滚动弹窗',
+  '日历网格布局优化',
+  '语音通话光束动画背景',
+  '移除FlashList依赖，优化体积',
+  '全局Header透明风格统一',
 ];
 
 export default function SettingsPage() {
@@ -42,6 +43,7 @@ export default function SettingsPage() {
   const [vadSensitivity, setVadSensitivity] = useState(settings.vadSensitivity ?? -40);
   const [silenceTimeout, setSilenceTimeout] = useState(settings.silenceTimeoutMs ?? 1800);
   const [pushToken, setPushToken] = useState<string | null>(null);
+  const [legalDialog, setLegalDialog] = useState<{ title: string; content: string } | null>(null);
 
   // Load push token on mount
   useEffect(() => {
@@ -162,6 +164,7 @@ export default function SettingsPage() {
   }
 
   return (
+    <>
     <ScrollView style={[styles.container, { backgroundColor: theme.bgPrimary }]} showsVerticalScrollIndicator={false}>
 
       {/* Profile */}
@@ -415,13 +418,22 @@ export default function SettingsPage() {
       <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>法律信息</Text>
       <View style={[styles.card, { backgroundColor: theme.bgSecondary }]}>
         <LinkRow icon="document-text-outline" label="责任边界声明" theme={theme} onPress={() => {
-          Alert.alert('责任边界声明', 'Curoco 责任边界声明\n\n1. 本软件仅为第三方AI大模型API接入客户端工具，不内置任何AI大模型服务，不提供AI生成能力，所有AI对话生成均由用户自行配置的第三方API服务商完成。\n\n2. 软件开发者不对第三方AI服务的可用性、准确性、安全性承担任何责任。\n\n3. 用户通过本软件生成的所有内容（包括但不限于对话、图片、语音）均由对应的第三方AI服务商处理和生成，相关责任由对应服务商及用户自行承担。\n\n4. 软件开发者不对用户使用本软件所产生的任何直接或间接后果承担责任。');
+          setLegalDialog({
+            title: '责任边界声明',
+            content: 'Curoco 责任边界声明\n\n1. 本软件仅为第三方AI大模型API接入客户端工具，不内置任何AI大模型服务，不提供AI生成能力，所有AI对话生成均由用户自行配置的第三方API服务商完成。\n\n2. 软件开发者不对第三方AI服务的可用性、准确性、安全性承担任何责任。\n\n3. 用户通过本软件生成的所有内容（包括但不限于对话、图片、语音）均由对应的第三方AI服务商处理和生成，相关责任由对应服务商及用户自行承担。\n\n4. 软件开发者不对用户使用本软件所产生的任何直接或间接后果承担责任。',
+          });
         }} />
         <LinkRow icon="shield-checkmark-outline" label="隐私声明" theme={theme} onPress={() => {
-          Alert.alert('隐私声明', 'Curoco 隐私声明\n\n1. 数据本地存储\n本软件无账户系统、无后端服务器。所有对话记录、API密钥、用户配置全部存储在用户本地设备，开发者无法获取。\n\n2. 联网功能说明\n本软件仅有两项联网功能：\n① 检查版本更新 — 仅请求版本号，不收集用户信息\n② 表情包关键词搜索 — 仅上传搜索关键词，不上传其他本地数据\n\n3. 用户数据处置权利\n用户可随时在设置中清除所有本地数据，包括聊天记录、角色配置、API密钥等。卸载应用将删除所有数据。\n\n4. 第三方API调用\n当用户配置并使用AI对话功能时，消息内容会发送至用户自行配置的第三方API服务商进行处理。数据传输由对应服务商的隐私政策管辖。');
+          setLegalDialog({
+            title: '隐私声明',
+            content: 'Curoco 隐私声明\n\n1. 数据本地存储\n本软件无账户系统、无后端服务器。所有对话记录、API密钥、用户配置全部存储在用户本地设备，开发者无法获取。\n\n2. 联网功能说明\n本软件仅有两项联网功能：\n① 检查版本更新 — 仅请求版本号，不收集用户信息\n② 表情包关键词搜索 — 仅上传搜索关键词，不上传其他本地数据\n\n3. 用户数据处置权利\n用户可随时在设置中清除所有本地数据，包括聊天记录、角色配置、API密钥等。卸载应用将删除所有数据。\n\n4. 第三方API调用\n当用户配置并使用AI对话功能时，消息内容会发送至用户自行配置的第三方API服务商进行处理。数据传输由对应服务商的隐私政策管辖。',
+          });
         }} />
         <LinkRow icon="warning-outline" label="免责与使用约束" theme={theme} onPress={() => {
-          Alert.alert('免责与使用约束', 'Curoco 免责与使用约束\n\n1. 非商用属性\n本软件为个人学习交流作品，仅限非商用场景使用。\n\n2. 禁止违法使用\n用户不得利用本软件从事违法违规活动，包括但不限于：生成违法内容、侵犯他人权益、进行欺诈活动等。\n\n3. 使用风险自担\n用户使用本软件产生的一切风险和后果由用户自行承担。AI生成内容可能不准确或存在偏见，请用户理性看待。\n\n4. 未成年人保护\n未满18周岁的用户应在监护人指导下使用本软件。\n\n5. 服务变更\n软件开发者保留随时修改、暂停或终止本软件服务的权利，恕不另行通知。');
+          setLegalDialog({
+            title: '免责与使用约束',
+            content: 'Curoco 免责与使用约束\n\n1. 非商用属性\n本软件为个人学习交流作品，仅限非商用场景使用。\n\n2. 禁止违法使用\n用户不得利用本软件从事违法违规活动，包括但不限于：生成违法内容、侵犯他人权益、进行欺诈活动等。\n\n3. 使用风险自担\n用户使用本软件产生的一切风险和后果由用户自行承担。AI生成内容可能不准确或存在偏见，请用户理性看待。\n\n4. 未成年人保护\n未满18周岁的用户应在监护人指导下使用本软件。\n\n5. 服务变更\n软件开发者保留随时修改、暂停或终止本软件服务的权利，恕不另行通知。',
+          });
         }} />
       </View>
 
@@ -440,9 +452,11 @@ export default function SettingsPage() {
       <View style={[styles.card, { backgroundColor: theme.bgSecondary }]}>
         <View style={styles.updateNotes}>
           {VERSION_UPDATE_NOTES.map((note, i) => (
-            <View key={i} style={styles.updateNoteRow}>
-              <Ionicons name="checkmark-circle" size={14} color="#2ED573" />
-              <Text style={[styles.updateNoteText, { color: theme.textPrimary }]}>{note}</Text>
+            <View key={i} style={[styles.updateNoteRow, i < VERSION_UPDATE_NOTES.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.divider, paddingBottom: 12, marginBottom: 12 }]}>
+              <View style={[styles.updateNoteIndex, { backgroundColor: 'rgba(108,99,255,0.08)' }]}>
+                <Text style={[styles.updateNoteIndexText, { color: theme.primary }]}>{i + 1}</Text>
+              </View>
+              <Text style={[styles.updateNoteText, { color: theme.textPrimary, flex: 1 }]}>{note}</Text>
             </View>
           ))}
         </View>
@@ -450,6 +464,27 @@ export default function SettingsPage() {
 
       <View style={{ height: 100 }} />
     </ScrollView>
+
+    {/* Legal Dialog Modal */}
+    <Modal visible={!!legalDialog} transparent animationType="fade" onRequestClose={() => setLegalDialog(null)}>
+      <TouchableOpacity style={legalStyles.overlay} activeOpacity={1} onPress={() => setLegalDialog(null)}>
+        <View style={[legalStyles.content, { backgroundColor: theme.bgSecondary }]}>
+          <View style={legalStyles.header}>
+            <Text style={[legalStyles.title, { color: theme.textPrimary }]}>{legalDialog?.title}</Text>
+            <TouchableOpacity onPress={() => setLegalDialog(null)} style={legalStyles.closeBtn}>
+              <Ionicons name="close" size={20} color={theme.textTertiary} />
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={legalStyles.body} showsVerticalScrollIndicator={false}>
+            <Text style={[legalStyles.text, { color: theme.textSecondary }]}>{legalDialog?.content}</Text>
+          </ScrollView>
+          <TouchableOpacity style={[legalStyles.footer, { backgroundColor: theme.primary }]} onPress={() => setLegalDialog(null)}>
+            <Text style={legalStyles.footerText}>我知道了</Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableOpacity>
+    </Modal>
+    </>
   );
 }
 
@@ -486,9 +521,14 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F0F0F2' },
   infoLabel: { fontSize: 15 },
   infoValue: { fontSize: 14 },
-  updateNotes: { padding: 16, gap: 10 },
-  updateNoteRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  updateNoteText: { fontSize: 13, lineHeight: 18, flex: 1 },
+  updateNotes: { padding: 16, gap: 0 },
+  updateNoteRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  updateNoteIndex: {
+    width: 24, height: 24, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  updateNoteIndexText: { fontSize: 11, fontWeight: '700' },
+  updateNoteText: { fontSize: 13, lineHeight: 18 },
   aboutLogoRow: { paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F0F0F2' },
   aboutName: { fontSize: 20, fontWeight: '800', letterSpacing: 1.5 },
   toggleRow: {
@@ -533,4 +573,30 @@ const styles = StyleSheet.create({
   memoryCheckText: {
     fontSize: 12, fontWeight: '500',
   },
+});
+
+const legalStyles = StyleSheet.create({
+  overlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center', alignItems: 'center', padding: 24,
+  },
+  content: {
+    width: '100%', maxHeight: '80%', borderRadius: 20, overflow: 'hidden',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15, shadowRadius: 24, elevation: 12,
+  },
+  header: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.06)',
+  },
+  title: { fontSize: 17, fontWeight: '700', flex: 1 },
+  closeBtn: { padding: 4 },
+  body: { paddingHorizontal: 20, paddingVertical: 16, maxHeight: 400 },
+  text: { fontSize: 13, lineHeight: 22 },
+  footer: {
+    marginHorizontal: 20, marginBottom: 20, borderRadius: 14,
+    paddingVertical: 12, alignItems: 'center',
+  },
+  footerText: { color: '#fff', fontSize: 15, fontWeight: '600' },
 });

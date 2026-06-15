@@ -1,6 +1,6 @@
 /**
- * Curoco — High-Performance Slider
- * Uses uncontrolled pattern: local state during drag, global save on release
+ * Curoco — High-Performance Slider with Tooltip
+ * Shows floating value above thumb during drag
  */
 
 import React, { useRef, useState, useCallback } from 'react';
@@ -11,8 +11,8 @@ interface SliderProps {
   min: number;
   max: number;
   step?: number;
-  onChange?: (value: number) => void;        // Called during drag (local only, no global state)
-  onSlidingComplete?: (value: number) => void; // Called on finger release (save to global)
+  onChange?: (value: number) => void;
+  onSlidingComplete?: (value: number) => void;
   trackColor?: string;
   thumbColor?: string;
   label?: string;
@@ -27,10 +27,10 @@ export default function Slider({
   label, unit = '', disabled = false,
 }: SliderProps) {
   const [trackWidth, setTrackWidth] = useState(280);
-  // Local value during drag — does NOT trigger parent re-render
   const localValueRef = useRef(value);
   const [displayValue, setDisplayValue] = useState(value);
   const isDragging = useRef(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   const percentage = (displayValue - min) / (max - min);
   const thumbLeft = percentage * (trackWidth - 24);
@@ -44,8 +44,8 @@ export default function Slider({
 
     if (newValue !== localValueRef.current) {
       localValueRef.current = newValue;
-      setDisplayValue(newValue); // Only update local display
-      onChange?.(newValue);      // Notify parent (for display only, no global setState)
+      setDisplayValue(newValue);
+      onChange?.(newValue);
     }
   }, [trackWidth, min, max, step, onChange]);
 
@@ -55,6 +55,7 @@ export default function Slider({
       onMoveShouldSetPanResponder: () => !disabled,
       onPanResponderGrant: (evt) => {
         isDragging.current = true;
+        setShowTooltip(true);
         updateValue(evt.nativeEvent.locationX);
       },
       onPanResponderMove: (evt) => {
@@ -64,12 +65,16 @@ export default function Slider({
       },
       onPanResponderRelease: () => {
         isDragging.current = false;
-        onSlidingComplete?.(localValueRef.current); // Save to global state ONCE
+        setShowTooltip(false);
+        onSlidingComplete?.(localValueRef.current);
+      },
+      onPanResponderTerminate: () => {
+        isDragging.current = false;
+        setShowTooltip(false);
       },
     })
   ).current;
 
-  // Sync external value changes (only when not dragging)
   React.useEffect(() => {
     if (!isDragging.current) {
       setDisplayValue(value);
@@ -93,7 +98,16 @@ export default function Slider({
       >
         <View style={[styles.track, { backgroundColor: '#E8E8F0' }]} />
         <View style={[styles.track, styles.trackActive, { backgroundColor: trackColor, width: thumbLeft + 12 }]} />
-        <View style={[styles.thumb, { left: thumbLeft, backgroundColor: thumbColor }]} />
+
+        {/* Tooltip */}
+        {showTooltip && (
+          <View style={[styles.tooltip, { left: thumbLeft + 12 - 20 }]}>
+            <Text style={styles.tooltipText}>{displayValue}</Text>
+            <View style={[styles.tooltipArrow, { borderTopColor: trackColor }]} />
+          </View>
+        )}
+
+        <View style={[styles.thumb, { left: thumbLeft, backgroundColor: thumbColor, transform: showTooltip ? [{ scale: 1.2 }] : [] }]} />
       </View>
 
       <View style={styles.rangeRow}>
@@ -116,6 +130,20 @@ const styles = StyleSheet.create({
     position: 'absolute', width: 24, height: 24, borderRadius: 12, top: 8,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2, shadowRadius: 4, elevation: 4,
+  },
+  tooltip: {
+    position: 'absolute', top: -8,
+    backgroundColor: '#6C63FF', borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 3,
+    alignItems: 'center', zIndex: 10,
+  },
+  tooltipText: { color: '#fff', fontSize: 11, fontWeight: '600' },
+  tooltipArrow: {
+    width: 0, height: 0,
+    borderLeftWidth: 5, borderRightWidth: 5, borderTopWidth: 5,
+    borderLeftColor: 'transparent', borderRightColor: 'transparent',
+    borderTopColor: '#6C63FF',
+    marginTop: -1,
   },
   rangeRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 },
   rangeText: { fontSize: 11, color: '#A0A0B8' },

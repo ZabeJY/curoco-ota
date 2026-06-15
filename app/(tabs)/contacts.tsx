@@ -2,13 +2,13 @@
  * Curoco — Contacts (Redesigned)
  */
 
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useState, useRef, useLayoutEffect } from 'react';
 import {
   View, FlatList, TouchableOpacity, Text, StyleSheet, Alert,
   ActivityIndicator, Platform, Modal, Animated,
 } from 'react-native';
 import TiltCard from '../../src/components/common/TiltCard';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,6 +20,7 @@ import type { Companion } from '../../src/types/models';
 
 export default function ContactsPage() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { theme } = useTheme();
   const insets = useSafeAreaInsets();
   const { companions, loadCompanions, deleteCompanion } = useCompanionStore();
@@ -31,6 +32,26 @@ export default function ContactsPage() {
 
   // Tab bar: height 64 + marginBottom 10 + safe area bottom
   const TAB_BAR_TOTAL = 64 + 10 + insets.bottom;
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => router.push('/settings')}
+          style={{ marginRight: 16 }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <View style={{
+            width: 32, height: 32, borderRadius: 16,
+            backgroundColor: 'rgba(0,0,0,0.25)',
+            alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Ionicons name="settings-outline" size={16} color="#fff" />
+          </View>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   useFocusEffect(useCallback(() => { loadCompanions(); }, []));
 
@@ -87,7 +108,7 @@ export default function ContactsPage() {
         data={companions}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TiltCard containerStyle={{ marginBottom: 2 }} disabled>
+          <TiltCard containerStyle={{ marginBottom: 2 }}>
             <TouchableOpacity style={styles.item} onPress={() => handlePress(item)} onLongPress={() => showMenu(item)} activeOpacity={0.6}>
               <Avatar uri={item.avatarUri} name={item.name} size="md" />
               <View style={styles.itemBody}>

@@ -7,10 +7,9 @@
 import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 import {
   View, StyleSheet, KeyboardAvoidingView, Platform,
-  ActivityIndicator, Text, TouchableOpacity, Keyboard, Alert, Modal, Animated,
+  ActivityIndicator, Text, TouchableOpacity, Keyboard, Alert, Modal, Animated, FlatList,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { FlashList } from '@shopify/flash-list';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -208,7 +207,7 @@ export default function ChatPage() {
         <Image source={{ uri: chatBgUri }} style={styles.chatBgImage} resizeMode="cover" />
       ) : null}
       {/* Messages — flex:1 so it fills space above input */}
-      <FlashList
+      <FlatList
         ref={flatListRef}
         data={messages}
         keyExtractor={(item) => item.id}
@@ -231,7 +230,6 @@ export default function ChatPage() {
         )}
         contentContainerStyle={styles.msgContent}
         style={styles.msgList}
-        estimatedItemSize={80}
         showsVerticalScrollIndicator={false}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"

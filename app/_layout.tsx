@@ -191,7 +191,7 @@ function RootNavigator() {
         <Stack.Screen name="settings/stickers" options={{ title: '表情包管理', headerBackTitle: '返回' }} />
         <Stack.Screen name="settings/user-profile" options={{ title: '个人信息', headerBackTitle: '返回' }} />
         <Stack.Screen name="settings/donate" options={{ title: '支持开发者', headerBackTitle: '返回' }} />
-        <Stack.Screen name="post/[id]" options={{ title: '动态详情', headerBackTitle: '返回', animation: 'slide_from_right' }} />
+        <Stack.Screen name="post/[id]" options={{ headerShown: false, animation: 'slide_from_right' }} />
       </Stack>
     </>
   );

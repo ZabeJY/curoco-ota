@@ -524,7 +524,7 @@ export default function DiscoverPage() {
     const isOwnPost = item.author_id === 'user';
 
     const card = (
-      <TiltCard disabled>
+      <TiltCard>
       <View style={styles.card}>
         {/* Header */}
         <View style={styles.cardHeader}>
@@ -701,9 +701,15 @@ export default function DiscoverPage() {
             <SkeletonFeed />
           ) : (
             <View style={styles.empty}>
-              <Ionicons name="planet-outline" size={44} color="#C0C0C0" />
+              <View style={styles.emptyIconWrap}>
+                <Ionicons name="sparkles" size={48} color="#6C63FF" />
+              </View>
               <Text style={styles.emptyTitle}>还没有动态</Text>
-              <Text style={styles.emptySub}>发布第一条动态吧</Text>
+              <Text style={styles.emptySub}>分享你的想法，让角色们看到你的生活</Text>
+              <TouchableOpacity style={styles.emptyBtn} onPress={() => setShowComposer(true)} activeOpacity={0.7}>
+                <Ionicons name="create-outline" size={16} color="#fff" />
+                <Text style={styles.emptyBtnText}>发布动态</Text>
+              </TouchableOpacity>
             </View>
           )
         }
@@ -866,9 +872,20 @@ const styles = StyleSheet.create({
   cSend: { fontSize: 14, fontWeight: '600', color: '#6C63FF' },
 
   // ── Empty ──
-  empty: { alignItems: 'center', padding: 60 },
-  emptyTitle: { fontSize: 17, fontWeight: '600', color: '#1A1A2E', marginTop: 16 },
-  emptySub: { fontSize: 14, color: '#8E8E93', marginTop: 6 },
+  empty: { alignItems: 'center', padding: 60, paddingTop: 80 },
+  emptyIconWrap: {
+    width: 88, height: 88, borderRadius: 24,
+    backgroundColor: 'rgba(108,99,255,0.08)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 20,
+  },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#1A1A2E', marginBottom: 8 },
+  emptySub: { fontSize: 14, color: '#8E8E93', marginBottom: 24, textAlign: 'center' },
+  emptyBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#6C63FF', paddingHorizontal: 20, paddingVertical: 10,
+    borderRadius: 20,
+  },
+  emptyBtnText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 
   // ── Composer ──
   composer: { flex: 1, backgroundColor: '#fff' },

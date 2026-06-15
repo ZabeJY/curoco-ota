@@ -156,7 +156,7 @@ export default function PostDetailScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Post */}
-        <TiltCard disabled>
+        <TiltCard>
         <View style={styles.postCard}>
           <View style={styles.postHeader}>
             <Avatar uri={post.author_avatar_uri || null} name={post.author_name} size="md" />

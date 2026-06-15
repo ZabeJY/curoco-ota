@@ -3,9 +3,9 @@
  * Better notification badges, auto-refresh on focus
  */
 
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useState, useRef, useLayoutEffect } from 'react';
 import { View, FlatList, StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import ChatListItem from '../../src/components/chat/ChatList';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -20,10 +20,31 @@ interface ConvWithComp extends Conversation {
 
 export default function ChatListPage() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { theme } = useTheme();
   const [conversations, setConversations] = useState<ConvWithComp[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => router.push('/settings')}
+          style={{ marginRight: 16 }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <View style={{
+            width: 32, height: 32, borderRadius: 16,
+            backgroundColor: 'rgba(0,0,0,0.25)',
+            alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Ionicons name="settings-outline" size={16} color="#fff" />
+          </View>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
 
   useFocusEffect(
     useCallback(() => {

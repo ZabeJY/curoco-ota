@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
   },
   // Content Card
   contentCard: {
-    marginTop: -32,
+    marginTop: -16,
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     paddingTop: AVATAR_SIZE + AVATAR_BORDER_WIDTH * 2 + 16,
@@ -268,7 +268,10 @@ const styles = StyleSheet.create({
   },
   // User Info
   signatureWrap: {
-    paddingHorizontal: 20, marginTop: 4, marginBottom: 8,
+    position: 'absolute',
+    top: AVATAR_SIZE / 2 + AVATAR_BORDER_WIDTH - 8,
+    right: 28 + AVATAR_SIZE + AVATAR_BORDER_WIDTH * 2 + 12,
+    maxWidth: SCREEN_WIDTH - 28 - AVATAR_SIZE - AVATAR_BORDER_WIDTH * 2 - 12 - 20,
   },
   userSignature: {
     fontSize: 13, lineHeight: 18, fontStyle: 'italic',

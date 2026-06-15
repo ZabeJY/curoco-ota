@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, TouchableOpacity, StyleSheet, Modal, TextInput, Alert, ScrollView,
+  View, Text, TouchableOpacity, StyleSheet, Modal, TextInput, Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { HabitRepository, type HabitWithStreak } from '../../db/repositories/HabitRepository';
@@ -199,23 +199,30 @@ export default function HabitTracker({ theme }: HabitTrackerProps) {
         </View>
 
         {/* Calendar grid */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.calGrid}>
-            {calendarDays.map((d) => {
-              const checkedHabits = habits.filter(h => monthRecords[h.id]?.includes(d.date));
-              return (
-                <View key={d.date} style={[styles.calDay, d.isToday && { borderColor: theme.primary, borderWidth: 1.5 }]}>
-                  <Text style={[styles.calDayNum, { color: d.isToday ? theme.primary : theme.textTertiary }]}>{d.day}</Text>
-                  <View style={styles.calDayDots}>
-                    {checkedHabits.slice(0, 3).map((h) => (
-                      <View key={h.id} style={[styles.calDot, { backgroundColor: h.color }]} />
-                    ))}
-                  </View>
+        <View style={styles.calWeekdays}>
+          {['日', '一', '二', '三', '四', '五', '六'].map((d) => (
+            <Text key={d} style={styles.calWeekday}>{d}</Text>
+          ))}
+        </View>
+        <View style={styles.calGrid}>
+          {/* Empty cells for days before month starts */}
+          {Array.from({ length: new Date(parseInt(currentMonth.split('-')[0]), parseInt(currentMonth.split('-')[1]) - 1, 1).getDay() }).map((_, i) => (
+            <View key={`empty-${i}`} style={styles.calDay} />
+          ))}
+          {calendarDays.map((d) => {
+            const checkedHabits = habits.filter(h => monthRecords[h.id]?.includes(d.date));
+            return (
+              <View key={d.date} style={[styles.calDay, d.isToday && styles.calDayToday, d.isToday && { borderColor: theme.primary, borderWidth: 1.5 }]}>
+                <Text style={[styles.calDayNum, { color: d.isToday ? theme.primary : theme.textTertiary }]}>{d.day}</Text>
+                <View style={styles.calDayDots}>
+                  {checkedHabits.slice(0, 3).map((h) => (
+                    <View key={h.id} style={[styles.calDot, { backgroundColor: h.color }]} />
+                  ))}
                 </View>
-              );
-            })}
-          </View>
-        </ScrollView>
+              </View>
+            );
+          })}
+        </View>
       </View>
 
       {/* Add Modal */}
@@ -303,9 +310,12 @@ const styles = StyleSheet.create({
   legendItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
   legendLabel: { fontSize: 11 },
-  calGrid: { flexDirection: 'row', gap: 4 },
-  calDay: { width: 36, alignItems: 'center', paddingVertical: 6, borderRadius: 10, gap: 4 },
-  calDayNum: { fontSize: 11, fontWeight: '500' },
+  calWeekdays: { flexDirection: 'row', marginBottom: 8 },
+  calWeekday: { flex: 1, textAlign: 'center', fontSize: 10, fontWeight: '500', color: '#A0A0B8' },
+  calGrid: { flexDirection: 'row', flexWrap: 'wrap' },
+  calDay: { width: '14.28%', alignItems: 'center', paddingVertical: 8, borderRadius: 12, gap: 4 },
+  calDayToday: { backgroundColor: 'rgba(108,99,255,0.08)' },
+  calDayNum: { fontSize: 12, fontWeight: '500' },
   calDayDots: { flexDirection: 'row', gap: 2 },
   calDot: { width: 5, height: 5, borderRadius: 2.5 },
   // Modal

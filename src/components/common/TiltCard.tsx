@@ -24,36 +24,54 @@ export default function TiltCard({ children, style, containerStyle, disabled = f
   const rotateX = useRef(new Animated.Value(0)).current;
   const rotateY = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
+  const longPressedRef = useRef(false);
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
-      onMoveShouldSetPanResponder: () => !disabled,
+      onMoveShouldSetPanResponder: () => !disabled && longPressedRef.current,
       onPanResponderGrant: () => {
-        Animated.spring(scale, { toValue: 1.02, friction: 8, tension: 100, useNativeDriver: true }).start();
+        longPressTimerRef.current = setTimeout(() => {
+          longPressedRef.current = true;
+          Animated.spring(scale, { toValue: 1.02, friction: 8, tension: 100, useNativeDriver: true }).start();
+        }, 500);
       },
       onPanResponderMove: (_, gestureState) => {
-        if (disabled) return;
+        if (disabled || !longPressedRef.current) return;
         const { dx, dy } = gestureState;
         const x = Math.max(-1, Math.min(1, dx / (SCREEN_WIDTH * 0.3)));
         const y = Math.max(-1, Math.min(1, dy / 200));
         rotateY.setValue(x * TILT_FACTOR);
-        rotateY.setValue(x * TILT_FACTOR);
         rotateX.setValue(-y * TILT_FACTOR);
       },
       onPanResponderRelease: () => {
-        Animated.parallel([
-          Animated.spring(rotateX, { toValue: 0, friction: 8, tension: 80, useNativeDriver: true }),
-          Animated.spring(rotateY, { toValue: 0, friction: 8, tension: 80, useNativeDriver: true }),
-          Animated.spring(scale, { toValue: 1, friction: 8, tension: 80, useNativeDriver: true }),
-        ]).start();
+        if (longPressTimerRef.current) {
+          clearTimeout(longPressTimerRef.current);
+          longPressTimerRef.current = null;
+        }
+        if (longPressedRef.current) {
+          longPressedRef.current = false;
+          Animated.parallel([
+            Animated.spring(rotateX, { toValue: 0, friction: 8, tension: 80, useNativeDriver: true }),
+            Animated.spring(rotateY, { toValue: 0, friction: 8, tension: 80, useNativeDriver: true }),
+            Animated.spring(scale, { toValue: 1, friction: 8, tension: 80, useNativeDriver: true }),
+          ]).start();
+        }
       },
       onPanResponderTerminate: () => {
-        Animated.parallel([
-          Animated.spring(rotateX, { toValue: 0, friction: 8, tension: 80, useNativeDriver: true }),
-          Animated.spring(rotateY, { toValue: 0, friction: 8, tension: 80, useNativeDriver: true }),
-          Animated.spring(scale, { toValue: 1, friction: 8, tension: 80, useNativeDriver: true }),
-        ]).start();
+        if (longPressTimerRef.current) {
+          clearTimeout(longPressTimerRef.current);
+          longPressTimerRef.current = null;
+        }
+        if (longPressedRef.current) {
+          longPressedRef.current = false;
+          Animated.parallel([
+            Animated.spring(rotateX, { toValue: 0, friction: 8, tension: 80, useNativeDriver: true }),
+            Animated.spring(rotateY, { toValue: 0, friction: 8, tension: 80, useNativeDriver: true }),
+            Animated.spring(scale, { toValue: 1, friction: 8, tension: 80, useNativeDriver: true }),
+          ]).start();
+        }
       },
     })
   ).current;

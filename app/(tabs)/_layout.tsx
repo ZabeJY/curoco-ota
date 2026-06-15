@@ -64,6 +64,9 @@ export default function TabLayout() {
         options={{
           title: '消息',
           headerTitle: '消息',
+          headerTransparent: true,
+          headerStyle: { backgroundColor: 'transparent' },
+          headerTitleStyle: { fontSize: 18, fontWeight: '700', color: '#fff' },
           tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-ellipses" size={size} color={color} />,
         }}
       />
@@ -72,6 +75,9 @@ export default function TabLayout() {
         options={{
           title: '角色',
           headerTitle: '角色',
+          headerTransparent: true,
+          headerStyle: { backgroundColor: 'transparent' },
+          headerTitleStyle: { fontSize: 18, fontWeight: '700', color: '#fff' },
           tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />,
         }}
       />
