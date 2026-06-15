@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "Curoco",
+    "slug": "curoco",
+    "version": "1.7.10",
+    "orientation": "portrait",
+    "icon": "./reallogo.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "curoco",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.curoco.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./reallogo.png"
+      },
+      "package": "com.curoco.app",
+      "softwareKeyboardLayoutMode": "resize",
+      "versionCode": 19
+    },
+    "web": {
+      "favicon": "./reallogo.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-splash-screen",
+      "expo-updates",
+      [
+        "expo-notifications",
+        {
+          "icon": "./reallogo.png",
+          "color": "#6C63FF"
+        }
+      ]
+    ],
+    "updates": {
+      "url": "https://zabejy.github.io/curoco-ota/",
+      "fallbackToCacheTimeout": 0
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "dc144d22-01c8-4388-809b-d27997250b9d"
+      }
+    },
+    "owner": "curocoauthor"
+  }
+}

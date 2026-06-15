@@ -1,0 +1,25 @@
+{
+  "cli": {
+    "version": ">= 3.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "preview": {
+      "android": {
+        "buildType": "apk"
+      },
+      "distribution": "internal"
+    },
+    "production": {
+      "android": {
+        "buildType": "apk"
+      }
+    }
+  },
+  "updates": {
+    "url": "https://zabejy.github.io/curoco-ota/"
+  },
+  "runtimeVersion": {
+    "policy": "appVersion"
+  }
+}

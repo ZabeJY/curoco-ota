@@ -1,10 +1,8 @@
 {
-  "version": "1.7.6",
-  "versionCode": 15,
-  "downloadUrl": "https://github.com/ZabeJY/curoco/releases/download/v1.7.6/Curoco_v1.7.6.apk",
+  "version": "1.7.10",
+  "versionCode": 19,
+  "downloadUrl": "https://github.com/ZabeJY/curoco/releases/download/v1.7.10/Curoco_v1.7.10.apk",
   "changelog": [
-    "语音通话界面全面重构：高级毛玻璃设计+实时对话转录",
-    "语音理解优化：ASR转写正确传递给LLM",
-    "通话中可看到双方对话内容"
+    "v1.7.10: 修复构建失败+TTS报错"
   ]
 }
