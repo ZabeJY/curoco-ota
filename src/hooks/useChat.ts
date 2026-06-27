@@ -8,6 +8,9 @@ import { AppState, type AppStateStatus } from 'react-native';
 import { MessageRepository } from '../db/repositories/MessageRepository';
 import { ConversationRepository } from '../db/repositories/ConversationRepo';
 import { MessageEngine, type MessageEngineCallbacks } from '../core/engine/MessageEngine';
+import { PromptBuilder } from '../core/engine/PromptBuilder';
+import { ResponseParser } from '../core/engine/ResponseParser';
+import { LLMClient } from '../core/api/LLMClient';
 import { PersonaEngine } from '../core/persona/PersonaEngine';
 import { TTSClient } from '../core/api/TTSClient';
 import { MiMoTTSClient } from '../core/api/MiMoTTSClient';
@@ -48,6 +51,8 @@ export function useChat(conversationId: string, companionId: string) {
   const isSendingRef = useRef(false); // Anti-burst: send lock
   const recentDedupRef = useRef<Map<string, number>>(new Map()); // Anti-burst: content dedup
   const appStateRef = useRef<AppStateStatus>(AppState.currentState); // Track app state
+  const silenceTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const silenceTriggeredRef = useRef(false); // Prevent multiple silence triggers
 
   const { sessions, typingConversations, addMessage, setMessages, setTyping } = useChatStore();
   const { apiConfigs, settings } = useSettingsStore();
@@ -86,6 +91,80 @@ export function useChat(conversationId: string, companionId: string) {
       setIsLoadingMore(false);
     }
   }, [conversationId, hasMore]);
+
+  // Silence detection: monitor when user stops replying
+  const startSilenceTimer = useCallback(() => {
+    if (silenceTimerRef.current) clearInterval(silenceTimerRef.current);
+    silenceTriggeredRef.current = false;
+    const startTime = Date.now();
+    const SILENCE_THRESHOLD_MS = 3 * 60 * 1000; // 3 minutes
+
+    silenceTimerRef.current = setInterval(async () => {
+      if (silenceTriggeredRef.current || isGeneratingRef.current || !mountedRef.current) return;
+      const elapsed = Date.now() - startTime;
+      if (elapsed < SILENCE_THRESHOLD_MS) return;
+
+      // Silence detected - trigger AI response
+      silenceTriggeredRef.current = true;
+      if (silenceTimerRef.current) clearInterval(silenceTimerRef.current);
+
+      try {
+        const currentMessages = useChatStore.getState().sessions[conversationId] || [];
+        if (currentMessages.length === 0) return;
+
+        // Check if last message was from AI (user hasn't replied)
+        const lastMsg = currentMessages[currentMessages.length - 1];
+        if (lastMsg.role !== 'assistant') return;
+
+        const persona = await PersonaEngine.load(companionId, settings.userSignature || '');
+        if (!persona || !apiConfigs.llm) return;
+
+        const silenceMinutes = Math.floor(elapsed / 60000);
+        const recentContext = currentMessages.slice(-5).map(m => ({
+          role: m.role,
+          content: m.content,
+        }));
+
+        const silencePrompt = PromptBuilder.buildSilencePrompt(
+          persona, recentContext, silenceMinutes, new Date().getHours()
+        );
+
+        const llm = new LLMClient(apiConfigs.llm);
+        const raw = await llm.chat([
+          { role: 'system', content: silencePrompt },
+          { role: 'user', content: '[对方没有回复，请根据情况自然回应]' },
+        ]);
+
+        const parsed = ResponseParser.parse(raw);
+        const aiText = parsed.messages.join(' ');
+        if (!aiText || aiText === '...') return;
+
+        // Send silence response as AI message
+        const msg: DisplayMessage = {
+          id: genId(), role: 'assistant', type: 'text',
+          content: aiText, emotion: parsed.emotion,
+          status: 'sent', isRead: mountedRef.current, createdAt: new Date().toISOString(),
+        };
+        addMessage(conversationId, msg);
+        try {
+          await MessageRepository.create({
+            conversationId, role: 'assistant', type: 'text',
+            content: aiText, emotion: parsed.emotion,
+          });
+          await ConversationRepository.updateLastAIMessage(conversationId, aiText.slice(0, 50));
+        } catch {}
+      } catch (e) {
+        console.warn('[Silence] Error:', e);
+      }
+    }, 30000); // Check every 30 seconds
+  }, [conversationId, companionId, apiConfigs.llm, settings.userSignature]);
+
+  const stopSilenceTimer = useCallback(() => {
+    if (silenceTimerRef.current) {
+      clearInterval(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+  }, []);
 
   // Initialize — runs once, engine stays alive even after unmount
   useEffect(() => {
@@ -152,6 +231,9 @@ export function useChat(conversationId: string, companionId: string) {
       cancelledRef.current = false; // DON'T cancel — keep engine alive for background delivery
       mountedRef.current = false;
       appStateSub.remove();
+      stopSilenceTimer();
+      // Clear store on unmount to prevent stale data on re-enter
+      useChatStore.getState().setMessages(conversationId, []);
     };
   }, [conversationId, companionId]);
 
@@ -340,42 +422,68 @@ export function useChat(conversationId: string, companionId: string) {
         } catch (e) { console.warn('Persist AI msg failed:', e); }
 
         // Check if AI message matches a custom sticker — send sticker as bonus
-        if (msgType === 'text' && msg.content.length <= 30) {
+        if (msgType === 'text') {
           try {
-            const stickers = await StickerRepository.getAll();
-            if (stickers.length > 0) {
-              // Fuzzy match: check meaning, tags, or content similarity
-              const match = stickers.find(s => {
-                const meaning = (s.meaning || '').toLowerCase();
-                const content = msg.content.toLowerCase();
-                if (!meaning) return false;
-                // Exact or partial match
-                if (content.includes(meaning) || meaning.includes(content)) return true;
-                // Check if any tag matches
-                try {
-                  const tags = Array.isArray(s.tags) ? s.tags : JSON.parse(s.tags || '[]');
-                  if (tags.some((t: string) => content.includes(t.toLowerCase()))) return true;
-                } catch {}
-                return false;
-              });
-              if (match) {
-                const stickerMsg: DisplayMessage = {
-                  id: genId(), role: 'assistant', type: 'custom_emoji',
-                  content: match.meaning || '[表情包]',
-                  emojiId: match.id, emojiUri: match.file_path, emojiMeaning: match.meaning,
-                  status: 'sent', isRead: mountedRef.current, createdAt: new Date().toISOString(),
-                };
-                addMessage(conversationId, stickerMsg);
-                try {
-                  await MessageRepository.create({
-                    conversationId, role: 'assistant', type: 'custom_emoji',
-                    content: match.meaning || '[表情包]', mediaUri: match.file_path,
-                  });
-                  if (mountedRef.current) {
-                    await ConversationRepository.resetUnread(conversationId);
-                  }
-                } catch {}
+            // First check for explicit [STICKER:id] tag in AI output
+            const stickerTagMatch = msg.content.match(/\[STICKER:([^\]]+)\]/);
+            let matchedSticker = null;
+            let cleanContent = msg.content;
+
+            if (stickerTagMatch) {
+              const stickerId = stickerTagMatch[1];
+              const allStickers = await StickerRepository.getAll();
+              matchedSticker = allStickers.find(s => s.id === stickerId);
+              cleanContent = msg.content.replace(/\[STICKER:[^\]]+\]/g, '').trim();
+            }
+
+            // Fallback: fuzzy match if no explicit tag
+            if (!matchedSticker && msg.content.length <= 30) {
+              const stickers = await StickerRepository.getAll();
+              if (stickers.length > 0) {
+                matchedSticker = stickers.find(s => {
+                  const meaning = (s.meaning || '').toLowerCase();
+                  const content = msg.content.toLowerCase();
+                  if (!meaning) return false;
+                  if (content.includes(meaning) || meaning.includes(content)) return true;
+                  try {
+                    const tags = Array.isArray(s.tags) ? s.tags : JSON.parse(s.tags || '[]');
+                    if (tags.some((t: string) => content.includes(t.toLowerCase()))) return true;
+                  } catch {}
+                  return false;
+                });
               }
+            }
+
+            if (matchedSticker) {
+              // Update the text message content (remove sticker tag)
+              if (cleanContent && cleanContent !== msg.content) {
+                const textMsg = useChatStore.getState().sessions[conversationId]?.find(m => m.id === aiMsg.id);
+                if (textMsg) {
+                  useChatStore.getState().setMessages(conversationId,
+                    useChatStore.getState().sessions[conversationId].map(m =>
+                      m.id === aiMsg.id ? { ...m, content: cleanContent } : m
+                    )
+                  );
+                  await MessageRepository.updateContent(aiMsg.id, cleanContent);
+                }
+              }
+              // Send sticker as a separate message
+              const stickerMsg: DisplayMessage = {
+                id: genId(), role: 'assistant', type: 'custom_emoji',
+                content: matchedSticker.meaning || '[表情包]',
+                emojiId: matchedSticker.id, emojiUri: matchedSticker.file_path, emojiMeaning: matchedSticker.meaning,
+                status: 'sent', isRead: mountedRef.current, createdAt: new Date().toISOString(),
+              };
+              addMessage(conversationId, stickerMsg);
+              try {
+                await MessageRepository.create({
+                  conversationId, role: 'assistant', type: 'custom_emoji',
+                  content: matchedSticker.meaning || '[表情包]', mediaUri: matchedSticker.file_path,
+                });
+                if (mountedRef.current) {
+                  await ConversationRepository.resetUnread(conversationId);
+                }
+              } catch {}
             }
           } catch {}
         }
@@ -409,10 +517,20 @@ export function useChat(conversationId: string, companionId: string) {
     }
     isGeneratingRef.current = false;
 
-    // Process next queued message if any
+    // Start silence timer after AI finishes responding
+    if (mountedRef.current) {
+      startSilenceTimer();
+    }
+
+    // Process next queued message if any — add context about the queued message
     if (pendingQueueRef.current.length > 0) {
       const next = pendingQueueRef.current.shift()!;
-      processMessage(next).catch((e) => console.warn('Queued processMessage failed:', e));
+      // If there were queued messages, tell the engine the user sent follow-ups
+      const queuedCount = pendingQueueRef.current.length;
+      const contextPrefix = queuedCount > 0
+        ? `[注意：在你回复期间，对方又连续发了${queuedCount + 1}条消息。请综合理解后自然回复，可以适当提及对方的连发行为。]\n`
+        : '';
+      processMessage(contextPrefix + next).catch((e) => console.warn('Queued processMessage failed:', e));
     }
   }
 
@@ -428,6 +546,9 @@ export function useChat(conversationId: string, companionId: string) {
     recentDedupRef.current.set(dedupKey, now);
     // Cleanup old entries after 10s
     setTimeout(() => recentDedupRef.current.delete(dedupKey), 10000);
+
+    // Reset silence timer when user sends a message
+    stopSilenceTimer();
 
     try {
       // 1. Show user message instantly with unique nonce
@@ -676,6 +797,8 @@ export function useChat(conversationId: string, companionId: string) {
       const current = useChatStore.getState().sessions[conversationId] || [];
       const updated = current.filter((m) => m.id !== messageId);
       useChatStore.getState().setMessages(conversationId, updated);
+      // Clear long-term memory to prevent AI from "remembering" deleted content
+      await ConversationRepository.resetMemory(conversationId);
     } catch (e) {
       console.warn('Recall failed:', e);
     }
@@ -690,6 +813,8 @@ export function useChat(conversationId: string, companionId: string) {
       const current = useChatStore.getState().sessions[conversationId] || [];
       const updated = current.filter((m) => m.id !== messageId);
       useChatStore.getState().setMessages(conversationId, updated);
+      // Clear long-term memory to prevent AI from "remembering" deleted content
+      await ConversationRepository.resetMemory(conversationId);
     } catch (e) {
       console.warn('Delete failed:', e);
     }

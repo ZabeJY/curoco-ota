@@ -1,8 +1,8 @@
 {
-  "version": "1.8.3",
-  "versionCode": 23,
-  "downloadUrl": "https://github.com/ZabeJY/curoco/releases/download/v1.8.3/Curoco_v1.8.3.apk",
+  "version": "1.8.4",
+  "versionCode": 24,
+  "downloadUrl": "https://github.com/ZabeJY/curoco/releases/download/v1.8.4/Curoco_v1.8.4.apk",
   "changelog": [
-    "v1.8.3: 修复语音通话/ASR, 人设记忆同步, 聊天记录分页, 完整记忆模式, 打卡优化, 语音情绪修复, UI优化"
+    "v1.8.4: 修复消息删除持久化, 时间感知优化, 沉默追问, 消息连发处理, 角色发表情包"
   ]
 }

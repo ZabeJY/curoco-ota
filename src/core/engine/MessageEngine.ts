@@ -11,6 +11,7 @@ import { ResponseParser } from './ResponseParser';
 import { PauseScheduler } from './PauseScheduler';
 import { ActiveMemory } from '../memory/ActiveMemory';
 import { SummaryWorker } from '../memory/SummaryWorker';
+import { StickerRepository } from '../../db/repositories/StickerRepository';
 import type { QueuedMessage } from '../../types/message';
 import type { Message, ApiConfig } from '../../types/models';
 import type { PersonaConfig } from '../../types/persona';
@@ -67,9 +68,12 @@ export class MessageEngine {
       await this.summaryWorker.checkAndCompress();
       if (this.cancelled) return;
 
-      let systemPrompt = PromptBuilder.buildSystemPrompt(this.persona, this.mediaState);
       const activeMessages = await this.activeMemory.getRecent();
       const longTermMemory = await this.activeMemory.getLongTermMemory();
+
+      // Get last message time for time gap awareness
+      const lastMsgTime = activeMessages.length > 0 ? activeMessages[activeMessages.length - 1].createdAt : undefined;
+      let systemPrompt = PromptBuilder.buildSystemPrompt(this.persona, this.mediaState, lastMsgTime);
 
       // Inject recent call event hint into system prompt (not as user message)
       const recentSystemMsgs = await this.activeMemory.getRecentSystemMessages();
@@ -88,6 +92,13 @@ export class MessageEngine {
           .map((c: any) => ({ content: c.content, created_at: c.created_at }));
         const spaceHint = PromptBuilder.buildSpaceActivityHint(userPosts, userComments);
         if (spaceHint) systemPrompt += spaceHint;
+      } catch {}
+
+      // Inject available custom stickers
+      try {
+        const stickers = await StickerRepository.getAll();
+        const stickerHint = PromptBuilder.buildStickerHint(stickers);
+        if (stickerHint) systemPrompt += stickerHint;
       } catch {}
 
       const messages = PromptBuilder.buildMessages(

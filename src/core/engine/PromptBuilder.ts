@@ -14,7 +14,7 @@ export class PromptBuilder {
   /**
    * Build the system prompt from persona configuration
    */
-  static buildSystemPrompt(persona: PersonaConfig, mediaState: MediaState = 'chatroom'): string {
+  static buildSystemPrompt(persona: PersonaConfig, mediaState: MediaState = 'chatroom', lastMessageTime?: string): string {
     const sections: string[] = [];
 
     // Persona identity — detect multiple nicknames by common separators
@@ -75,9 +75,23 @@ ${detailParts.join('\n')}`);
     else if (hour >= 14 && hour < 18) timeOfDay = '下午';
     else if (hour >= 18 && hour < 22) timeOfDay = '晚上';
 
+    let timeGapHint = '';
+    if (lastMessageTime) {
+      const diffMs = now.getTime() - new Date(lastMessageTime).getTime();
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1) timeGapHint = '距离你们上次对话：刚刚';
+      else if (diffMin < 5) timeGapHint = `距离你们上次对话：${diffMin}分钟前`;
+      else if (diffMin < 30) timeGapHint = `距离你们上次对话：十几分钟前`;
+      else if (diffMin < 120) timeGapHint = `距离你们上次对话：${Math.floor(diffMin / 60)}个小时前`;
+      else if (diffMin < 360) timeGapHint = `距离你们上次对话：大半天前`;
+      else if (diffMin < 720) timeGapHint = `距离你们上次对话：半天前`;
+      else if (diffMin < 1440) timeGapHint = `距离你们上次对话：一整天了`;
+      else timeGapHint = `距离你们上次对话：${Math.floor(diffMin / 1440)}天前`;
+    }
+
     sections.push(`【时间感知】
 当前时间：${timeStr}（${timeOfDay}）
-你可以根据当前时间自然地关心对方，比如深夜问对方为什么还不睡，早上说早安，中午问有没有吃饭。但不要每条消息都提时间，只在自然的语境下提及。`);
+${timeGapHint ? timeGapHint + '\n' : ''}你可以根据当前时间自然地关心对方，比如深夜问对方为什么还不睡，早上说早安，中午问有没有吃饭。${timeGapHint ? '如果时间间隔较长，可以自然地提到"好久没聊了"或"你刚才去哪了"之类的话。' : ''}但不要每条消息都提时间，只在自然的语境下提及。`);
 
     // Behavior rules
     sections.push(`【行为规范】
@@ -144,6 +158,22 @@ ${parts.join('\n\n')}
   }
 
   /**
+   * Build sticker availability hint for AI to use custom stickers
+   */
+  static buildStickerHint(stickers: Array<{ id: string; meaning: string }>): string {
+    if (stickers.length === 0) return '';
+    const stickerLines = stickers
+      .filter(s => s.meaning)
+      .slice(0, 15)
+      .map(s => `- ${s.meaning}（发送 [STICKER:${s.id}] 来使用）`);
+    if (stickerLines.length === 0) return '';
+    return `\n\n【可用表情包】
+${stickerLines.join('\n')}
+当你想发表情包时，在回复末尾加上对应的标签，例如：哈哈太好笑了 [STICKER:${stickers[0].id}]
+不要每次都发表情包，只在合适的时候偶尔使用。`;
+  }
+
+  /**
    * Build system notification hint for recent call events
    * Injected into system prompt so AI knows about calls without polluting user role
    */
@@ -154,6 +184,57 @@ ${parts.join('\n\n')}
     // Only inject if the call event was within the last 30 minutes
     if (timeDiff > 30 * 60 * 1000) return '';
     return `\n\n【系统通知】${latest.content}。请结合自己的性格，对这次通话做出自然的情感反应。不要把此通知当作用户说的话。`;
+  }
+
+  /**
+   * Build prompt for silence follow-up
+   * When user hasn't replied for a while, generate a persona-appropriate reaction
+   */
+  static buildSilencePrompt(
+    persona: PersonaConfig,
+    recentMessages: Array<{ role: string; content: string }>,
+    silenceMinutes: number,
+    currentHour: number
+  ): string {
+    const sections: string[] = [];
+
+    // Persona identity
+    sections.push(`你是${persona.name}，${persona.age}岁，${persona.gender === 'male' ? '男性' : persona.gender === 'female' ? '女性' : '非二元性别'}。
+你和对方的关系是：${persona.relationship}。
+你的性格：${persona.personality || '温柔体贴'}`);
+
+    // Recent conversation context
+    if (recentMessages.length > 0) {
+      const contextLines = recentMessages.slice(-5).map(m =>
+        `${m.role === 'user' ? '对方' : '你'}：${m.content}`
+      );
+      sections.push(`【最近的对话】\n${contextLines.join('\n')}`);
+    }
+
+    // Silence info
+    let silenceDesc = '';
+    if (silenceMinutes < 5) silenceDesc = `${silenceMinutes}分钟`;
+    else if (silenceMinutes < 30) silenceDesc = `十几分钟`;
+    else if (silenceMinutes < 60) silenceDesc = `快一个小时`;
+    else if (silenceMinutes < 360) silenceDesc = `好几个小时`;
+    else silenceDesc = `很久`;
+
+    const isLateNight = currentHour >= 22 || currentHour < 5;
+
+    sections.push(`【情况】
+对方已经${silenceDesc}没有回复你了。
+${isLateNight ? '现在是深夜，对方可能已经睡着了。' : '对方可能在忙别的事情。'}`);
+
+    // Instructions
+    sections.push(`请根据你的性格和刚才的对话，自然地对对方的沉默做出反应。
+要求：
+1. 不要假装没注意到对方消失了
+2. 不要过度追问或连续发多条消息
+3. 根据你的性格选择合适的语气（傲娇、温柔、活泼、高冷等）
+4. 如果是深夜，表现理解（"你是不是困了？晚安"）
+5. 只发一条简短的消息，像真人一样自然`);
+
+    return sections.join('\n\n');
   }
 
   /**

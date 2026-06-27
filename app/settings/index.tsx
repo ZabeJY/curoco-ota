@@ -18,20 +18,14 @@ import SparkleText from '../../src/components/common/SparkleText';
 import { CloudSyncService } from '../../src/core/CloudSyncService';
 import { registerForPushNotifications, getStoredPushToken } from '../../src/core/PushNotificationManager';
 
-const CURRENT_VERSION = '1.8.3';
+const CURRENT_VERSION = '1.8.4';
 const VERSION_UPDATE_NOTES = [
-  '修复语音通话无法使用：添加expo-av插件、麦克风权限请求、VAD检测优化',
-  '修复语音消息识别失败：atob兼容性修复、ASR语言动态化',
-  '人设与记忆跨界面同步：语音通话/群聊/主动消息补全userSignature和长期记忆',
-  '聊天记录分页加载：支持无限滚动查看全部历史消息',
-  '完整记忆模式真正实现：LLM上下文窗口从20条扩大到200条',
-  '生活打卡性能优化：数据库查询从1800+次降至3次',
-  '生活打卡UX改进：支持签到切换、编辑习惯名称',
-  '语音克隆情绪修复：通话中正确传递emotion参数给TTS',
-  '丰富情绪描述：扩展至16种情绪，增强克隆音色表达力',
-  '页面标题自适应颜色：浅色/深色背景下自动调整字体颜色',
-  '法律信息弹窗滚动优化：增加内容区域高度',
-  '支持开发者页面排版修复：卡片布局均匀分布',
+  '修复消息删除不持久化：退出聊天重进后消息不再恢复',
+  '删除消息同步清除长期记忆：AI不再记住已删除的内容',
+  '时间感知优化：角色能感知距上次对话的时间间隔',
+  '沉默追问功能：用户长时间不回复时角色会自然关心',
+  '消息连发处理：用户连续发消息时AI会综合理解回复',
+  '角色主动发表情包：AI可根据语境选择发送用户导入的表情包',
 ];
 
 export default function SettingsPage() {

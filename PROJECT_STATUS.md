@@ -7,7 +7,7 @@
 - EAS Build (APK) + EAS Update (热更新)
 
 ## 当前版本
-- **v1.8.3** (versionCode: 23)
+- **v1.8.4** (versionCode: 24)
 - GitHub: `ZabeJY/curoco` (master 分支)
 
 ## 已完成的核心功能
@@ -293,24 +293,27 @@
 11. 法律信息弹窗滚动优化：增加内容区域高度
 12. 支持开发者页面排版修复：卡片布局均匀分布
 
+## v1.8.4 更新内容
+1. 修复消息删除不持久化：退出聊天重进后消息不再恢复
+2. 删除消息同步清除长期记忆：AI不再记住已删除的内容
+3. 时间感知优化：角色能感知距上次对话的时间间隔
+4. 沉默追问功能：用户长时间不回复时角色会自然关心
+5. 消息连发处理：用户连续发消息时AI会综合理解回复
+6. 角色主动发表情包：AI可根据语境选择发送用户导入的表情包
+
 ## 当前开发状态（供下次对话参考）
 
 ### 最新版本
-- **v1.8.3** 已完成
+- **v1.8.4** 已完成
 
 ### 本次会话完成的工作
-1. ✅ 语音通话修复：expo-av插件、麦克风权限、VAD metering回退
-2. ✅ ASR修复：atob polyfill、语言动态化
-3. ✅ 人设同步：3处通话PersonaEngine + 群聊 + ProactiveManager表名
-4. ✅ 聊天记录分页：MessageRepository.getOlderMessages + FlatList无限滚动
-5. ✅ 完整记忆模式：ActiveMemory窗口扩大到200条
-6. ✅ 打卡性能优化：getStreak单SQL、getAllWithStreak批量查询
-7. ✅ 打卡UX：toggle签到、编辑习惯、useMemo优化
-8. ✅ 语音情绪：通话传递emotion、16种情绪描述、MIME类型修复
-9. ✅ 页面标题自适应颜色
-10. ✅ 法律弹窗滚动优化
-11. ✅ 打赏页面排版修复
-12. ✅ 版本号更新至1.8.3
+1. ✅ 消息删除持久化修复
+2. ✅ 长期记忆同步清除
+3. ✅ 时间感知注入（PromptBuilder + MessageEngine）
+4. ✅ 沉默追问机制（timer + buildSilencePrompt）
+5. ✅ 消息连发上下文注入
+6. ✅ 角色主动发表情包（prompt注入 + STICKER:id标签）
+7. ✅ 版本号更新至1.8.4
 
 ### 下一步可做的方向
 - 云端同步（用户明确暂缓）
