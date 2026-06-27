@@ -3,7 +3,7 @@
  * Daily check-in with mini calendar and streak display
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, TextInput, Alert,
 } from 'react-native';
@@ -22,6 +22,8 @@ interface HabitTrackerProps {
 export default function HabitTracker({ theme }: HabitTrackerProps) {
   const [habits, setHabits] = useState<HabitWithStreak[]>([]);
   const [showAdd, setShowAdd] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<HabitWithStreak | null>(null);
   const [newName, setNewName] = useState('');
   const [newIcon, setNewIcon] = useState('✅');
   const [newColor, setNewColor] = useState('#6C63FF');
@@ -49,7 +51,12 @@ export default function HabitTracker({ theme }: HabitTrackerProps) {
 
   async function handleToggle(habitId: string) {
     try {
-      await HabitRepository.checkIn(habitId, today);
+      const isChecked = await HabitRepository.isCheckedIn(habitId, today);
+      if (isChecked) {
+        await HabitRepository.uncheckIn(habitId, today);
+      } else {
+        await HabitRepository.checkIn(habitId, today);
+      }
       await loadHabits();
     } catch (e) { console.warn('Toggle habit:', e); }
   }
@@ -82,7 +89,24 @@ export default function HabitTracker({ theme }: HabitTrackerProps) {
     ]);
   }
 
-  function getCalendarDays(): Array<{ day: number; date: string; isToday: boolean }> {
+  function handleEdit(habit: HabitWithStreak) {
+    setEditingHabit(habit);
+    setNewName(habit.name);
+    setNewIcon(habit.icon);
+    setNewColor(habit.color);
+    setShowEdit(true);
+  }
+
+  async function handleSaveEdit() {
+    if (!editingHabit || !newName.trim()) return;
+    await HabitRepository.update(editingHabit.id, { name: newName.trim(), icon: newIcon, color: newColor });
+    setShowEdit(false);
+    setEditingHabit(null);
+    setNewName('');
+    await loadHabits();
+  }
+
+  const calendarDays = useMemo(() => {
     const [y, m] = currentMonth.split('-').map(Number);
     const daysInMonth = new Date(y, m, 0).getDate();
     const result = [];
@@ -91,15 +115,13 @@ export default function HabitTracker({ theme }: HabitTrackerProps) {
       result.push({ day: d, date: dateStr, isToday: dateStr === today });
     }
     return result;
-  }
+  }, [currentMonth, today]);
 
   function changeMonth(delta: number) {
     const [y, m] = currentMonth.split('-').map(Number);
     const d = new Date(y, m - 1 + delta, 1);
     setCurrentMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
   }
-
-  const calendarDays = getCalendarDays();
   const monthLabel = (() => {
     const [y, m] = currentMonth.split('-').map(Number);
     return `${y}年${m}月`;
@@ -171,8 +193,12 @@ export default function HabitTracker({ theme }: HabitTrackerProps) {
             </TouchableOpacity>
           )}
 
+          <TouchableOpacity onPress={() => handleEdit(h)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Ionicons name="pencil" size={14} color={theme.textTertiary} />
+          </TouchableOpacity>
+
           <TouchableOpacity onPress={() => handleDelete(h.id, h.name)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="ellipsis-vertical" size={14} color={theme.textTertiary} />
+            <Ionicons name="trash-outline" size={14} color={theme.textTertiary} />
           </TouchableOpacity>
         </View>
       ))}
@@ -275,6 +301,60 @@ export default function HabitTracker({ theme }: HabitTrackerProps) {
               disabled={!newName.trim()}
             >
               <Text style={styles.modalConfirmText}>创建</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </GlassModal>
+
+      {/* Edit Modal */}
+      <GlassModal visible={showEdit} onClose={() => { setShowEdit(false); setEditingHabit(null); }}>
+        <View style={{ padding: 8 }}>
+          <Text style={[styles.modalTitle, { color: theme.textPrimary }]}>编辑打卡</Text>
+
+          <TextInput
+            style={[styles.modalInput, { color: theme.textPrimary, borderColor: theme.border, backgroundColor: theme.bgInput }]}
+            value={newName}
+            onChangeText={setNewName}
+            placeholder="打卡名称"
+            placeholderTextColor={theme.textTertiary}
+            maxLength={20}
+            autoFocus
+          />
+
+          <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>图标</Text>
+          <View style={styles.iconGrid}>
+            {ICONS.map((icon) => (
+              <TouchableOpacity
+                key={icon}
+                style={[styles.iconItem, { borderColor: 'transparent' }, newIcon === icon && { backgroundColor: theme.primaryLight, borderColor: theme.primary }]}
+                onPress={() => setNewIcon(icon)}
+              >
+                <Text style={styles.iconEmoji}>{icon}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text style={[styles.pickerLabel, { color: theme.textSecondary }]}>颜色</Text>
+          <View style={styles.colorGrid}>
+            {COLORS.map((color) => (
+              <TouchableOpacity
+                key={color}
+                style={[styles.colorItem, { backgroundColor: color }, newColor === color && styles.colorSelected]}
+                onPress={() => setNewColor(color)}
+              />
+            ))}
+          </View>
+
+          <View style={styles.modalBtns}>
+            <TouchableOpacity style={styles.modalCancel} onPress={() => { setShowEdit(false); setEditingHabit(null); }}>
+              <Text style={[styles.modalCancelText, { color: theme.textTertiary }]}>取消</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modalConfirm, { backgroundColor: theme.primary, opacity: newName.trim() ? 1 : 0.4 }]}
+              onPress={handleSaveEdit}
+              disabled={!newName.trim()}
+            >
+              <Text style={styles.modalConfirmText}>保存</Text>
             </TouchableOpacity>
           </View>
         </View>

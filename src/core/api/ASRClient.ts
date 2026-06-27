@@ -119,14 +119,34 @@ export class ASRClient {
     const extMap: Record<string, string> = { 'audio/wav': 'wav', 'audio/mp4': 'm4a', 'audio/mpeg': 'mp3', 'audio/ogg': 'ogg' };
     const ext = extMap[mimeType] || 'm4a';
 
-    const formData = new FormData();
-    const byteCharacters = atob(cleanBase64);
+    // Safe base64 decode: use atob if available, otherwise polyfill
+    let byteCharacters: string;
+    if (typeof atob === 'function') {
+      byteCharacters = atob(cleanBase64);
+    } else {
+      // Polyfill for environments without atob (e.g. some React Native versions)
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+      let result = '';
+      for (let i = 0; i < cleanBase64.length; i += 4) {
+        const a = chars.indexOf(cleanBase64[i] || '');
+        const b = chars.indexOf(cleanBase64[i + 1] || '');
+        const c = chars.indexOf(cleanBase64[i + 2] || '');
+        const d = chars.indexOf(cleanBase64[i + 3] || '');
+        const bitmap = (a << 18) | (b << 12) | (c << 6) | d;
+        result += String.fromCharCode((bitmap >> 16) & 255);
+        if (cleanBase64[i + 2] !== '=') result += String.fromCharCode((bitmap >> 8) & 255);
+        if (cleanBase64[i + 3] !== '=') result += String.fromCharCode(bitmap & 255);
+      }
+      byteCharacters = result;
+    }
+
     const byteArray = new Uint8Array(byteCharacters.length);
     for (let i = 0; i < byteCharacters.length; i++) byteArray[i] = byteCharacters.charCodeAt(i);
     const blob = new Blob([byteArray], { type: mimeType });
+    const formData = new FormData();
     formData.append('file', blob, `audio.${ext}`);
     formData.append('model', this.config!.modelName || 'whisper-1');
-    formData.append('language', 'zh');
+    formData.append('language', getDeviceLanguage());
 
     // Build headers: support both Bearer and api-key, merge extraHeaders
     const headers: Record<string, string> = {};

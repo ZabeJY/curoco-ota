@@ -17,12 +17,15 @@ export class ActiveMemory {
 
   /**
    * Get the N most recent messages (active memory window)
+   * In full memory mode (compressionTriggerCount >= 99999), returns up to 200 messages
    */
   async getRecent(): Promise<Message[]> {
     const settings = await SettingsRepository.getSettings();
+    const isFullMemory = settings.compressionTriggerCount >= 99999;
+    const windowSize = isFullMemory ? Math.min(200, settings.activeMemoryWindowSize * 10) : settings.activeMemoryWindowSize;
     return MessageRepository.getRecent(
       this.conversationId,
-      settings.activeMemoryWindowSize
+      windowSize
     );
   }
 

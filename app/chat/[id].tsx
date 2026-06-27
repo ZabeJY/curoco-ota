@@ -46,7 +46,7 @@ export default function ChatPage() {
   const router = useRouter();
   const { theme, isDark } = useTheme();
   const flatListRef = useRef<any>(null);
-  const { messages, isTyping, isLoading, companionName, voiceEnabled, sendText, sendImage, sendVoice, sendSticker, sendCustomSticker, recallMessage, deleteMessage, transcribeMessage } = useChat(id!, companionId!);
+  const { messages, isTyping, isLoading, companionName, voiceEnabled, hasMore, isLoadingMore, loadMoreMessages, sendText, sendImage, sendVoice, sendSticker, sendCustomSticker, recallMessage, deleteMessage, transcribeMessage } = useChat(id!, companionId!);
   const [showMenu, setShowMenu] = useState(false);
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const [quoteMessage, setQuoteMessage] = useState<{ id: string; content: string; role: string } | null>(null);
@@ -237,6 +237,18 @@ export default function ChatPage() {
         showsVerticalScrollIndicator={false}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
+        onEndReached={loadMoreMessages}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isLoadingMore ? (
+          <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+            <ActivityIndicator size="small" color={theme.textTertiary} />
+            <Text style={{ color: theme.textTertiary, fontSize: 12, marginTop: 4 }}>加载更早消息...</Text>
+          </View>
+        ) : !hasMore && messages.length > 50 ? (
+          <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+            <Text style={{ color: theme.textTertiary, fontSize: 12 }}>已无更多消息</Text>
+          </View>
+        ) : null}
       />
 
       {/* Input — stays above keyboard, always enabled so user can send during AI generation */}

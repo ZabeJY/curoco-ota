@@ -97,5 +97,5 @@ const styles = StyleSheet.create({
   },
   cardBottom: { alignSelf: 'center', marginTop: 'auto', marginBottom: 40 },
   content: { position: 'relative', zIndex: 1 },
-  scrollContent: { maxHeight: 400 },
+  scrollContent: { maxHeight: 500 },
 });

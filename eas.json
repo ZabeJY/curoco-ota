@@ -15,11 +15,5 @@
         "buildType": "apk"
       }
     }
-  },
-  "updates": {
-    "url": "https://zabejy.github.io/curoco-ota/"
-  },
-  "runtimeVersion": {
-    "policy": "appVersion"
   }
 }

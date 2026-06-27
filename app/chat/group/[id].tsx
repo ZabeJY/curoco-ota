@@ -36,7 +36,7 @@ export default function GroupChatPage() {
   const navigation = useNavigation();
   const { theme } = useTheme();
   const flatListRef = useRef<FlatList>(null);
-  const { messages, isTyping, isLoading, groupName, sendText } = useGroupChat(id!);
+  const { messages, isTyping, isLoading, groupName, hasMore, isLoadingMore, loadMoreMessages, sendText } = useGroupChat(id!);
 
   useEffect(() => {
     navigation.setOptions({
@@ -91,6 +91,13 @@ export default function GroupChatPage() {
         showsVerticalScrollIndicator={false}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
+        onEndReached={loadMoreMessages}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={isLoadingMore ? (
+          <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+            <ActivityIndicator size="small" color={theme.textTertiary} />
+          </View>
+        ) : null}
       />
 
       <ChatInput

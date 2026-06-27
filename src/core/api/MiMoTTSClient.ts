@@ -13,16 +13,22 @@ import type { ApiConfig } from '../../types/models';
 export type MiMoTTSModel = 'mimo-v2.5-tts' | 'mimo-v2.5-tts-voiceclone' | 'mimo-v2.5-tts-voicedesign';
 
 const EMOTION_STYLES: Record<string, string> = {
-  happy: 'Warm, cheerful, upbeat tone. Natural pace, slightly rising pitch.',
-  sad: 'Gentle, soft, melancholic tone. Slow pace, lower pitch.',
-  shy: 'Soft, hesitant, slightly breathy tone. Pauses between phrases.',
-  excited: 'Fast, energetic, bursting with enthusiasm. Rising pitch.',
-  angry: 'Firm, sharp, frustrated tone. Clipped words, forceful.',
-  thinking: 'Slow, contemplative, uncertain tone. Pauses for thought.',
-  neutral: 'Calm, clear, conversational tone. Natural pace and pitch.',
-  surprised: 'High-pitched, sudden, incredulous tone.',
-  worried: 'Anxious, slightly trembling, concerned tone.',
-  playful: 'Teasing, sing-song, mischievous tone. Variable pitch.',
+  happy: 'Warm, cheerful, upbeat tone. Natural pace, slightly rising pitch. Bright and friendly.',
+  sad: 'Gentle, soft, melancholic tone. Slow pace, lower pitch. Quiet and reflective.',
+  shy: 'Soft, hesitant, slightly breathy tone. Pauses between phrases. Gentle and reserved.',
+  excited: 'Fast, energetic, bursting with enthusiasm. Rising pitch. Animated and lively.',
+  angry: 'Firm, sharp, frustrated tone. Clipped words, forceful delivery. Tense.',
+  thinking: 'Slow, contemplative, uncertain tone. Pauses for thought. Pensive and measured.',
+  neutral: 'Calm, clear, conversational tone. Natural pace and pitch. Relaxed.',
+  surprised: 'High-pitched, sudden, incredulous tone. Quick pace. Startled.',
+  worried: 'Anxious, slightly trembling, concerned tone. Hesitant pace. Uneasy.',
+  playful: 'Teasing, sing-song, mischievous tone. Variable pitch. Light and bouncy.',
+  tender: 'Soft, warm, affectionate tone. Slow and gentle pace. Intimate and caring.',
+  sarcastic: 'Dry, slightly mocking tone. Deliberate pace with emphasis. Wry and knowing.',
+  frustrated: 'Strained, slightly raised voice. Exasperated tone. Impatient.',
+  confident: 'Strong, steady, assured tone. Clear enunciation. Bold and self-assured.',
+  nervous: 'Slightly shaky, quick pace with small pauses. Uneasy and fidgety.',
+  grateful: 'Warm, sincere, heartfelt tone. Gentle pace. Appreciative and genuine.',
 };
 
 export class MiMoTTSClient {

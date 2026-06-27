@@ -133,9 +133,10 @@ const styles = StyleSheet.create({
   // Tier Grid
   tierGrid: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 12,
+    justifyContent: 'space-between',
   },
   tierCard: {
-    width: '31%', borderRadius: 16, padding: 14,
+    width: '30%', borderRadius: 16, padding: 14,
     minHeight: 140, justifyContent: 'space-between',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,

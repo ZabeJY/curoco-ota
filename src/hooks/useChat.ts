@@ -56,6 +56,37 @@ export function useChat(conversationId: string, companionId: string) {
   const isTyping = typingConversations.has(conversationId);
   const isGenerating = isTyping; // Alias for UI
 
+  // Pagination state
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loadingMoreRef = useRef(false);
+
+  const loadMoreMessages = useCallback(async () => {
+    if (loadingMoreRef.current || !hasMore) return;
+    loadingMoreRef.current = true;
+    setIsLoadingMore(true);
+    try {
+      const currentMessages = useChatStore.getState().sessions[conversationId] || [];
+      if (currentMessages.length === 0) { setHasMore(false); return; }
+      // Get the oldest message timestamp as cursor
+      const oldestMsg = currentMessages[0];
+      const olderMsgs = await MessageRepository.getOlderMessages(conversationId, oldestMsg.createdAt, 50);
+      if (olderMsgs.length === 0) {
+        setHasMore(false);
+      } else {
+        // Prepend older messages to existing
+        const existing = useChatStore.getState().sessions[conversationId] || [];
+        useChatStore.getState().setMessages(conversationId, [...olderMsgs.map(msgToDisplay), ...existing]);
+        if (olderMsgs.length < 50) setHasMore(false);
+      }
+    } catch (e) {
+      console.warn('Load more messages failed:', e);
+    } finally {
+      loadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [conversationId, hasMore]);
+
   // Initialize — runs once, engine stays alive even after unmount
   useEffect(() => {
     cancelledRef.current = false;
@@ -206,7 +237,7 @@ export function useChat(conversationId: string, companionId: string) {
                       if (info.exists) {
                         const b64 = await FS.readAsStringAsync(sampleUri, { encoding: FS.EncodingType.Base64 });
                         const ext = sampleUri.split('.').pop()?.toLowerCase() || 'mp3';
-                        const mime = ext === 'wav' ? 'audio/wav' : 'audio/mpeg';
+                        const mime = ext === 'wav' ? 'audio/wav' : ext === 'm4a' ? 'audio/mp4' : 'audio/mpeg';
                         model = 'mimo-v2.5-tts-voiceclone';
                         voice = `data:${mime};base64,${b64}`;
                       } else {
@@ -666,6 +697,7 @@ export function useChat(conversationId: string, companionId: string) {
 
   return {
     messages, isTyping, isLoading, companionName, voiceEnabled, voiceStatus,
+    hasMore, isLoadingMore, loadMoreMessages,
     sendText, sendImage, sendVoice, sendSticker, sendCustomSticker, recallMessage, deleteMessage, transcribeMessage,
   };
 }

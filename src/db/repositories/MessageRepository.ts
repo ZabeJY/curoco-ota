@@ -45,6 +45,15 @@ export const MessageRepository = {
     return rows.reverse().map(rowToMessage);
   },
 
+  async getOlderMessages(conversationId: string, beforeTimestamp: string, limit: number): Promise<Message[]> {
+    const db = await getDatabase();
+    const rows = await db.getAllAsync(
+      `SELECT * FROM messages WHERE conversation_id = ? AND created_at < ? ORDER BY created_at DESC LIMIT ?`,
+      [conversationId, beforeTimestamp, limit]
+    );
+    return rows.reverse().map(rowToMessage);
+  },
+
   async getOlderThan(conversationId: string, offset: number, limit: number): Promise<Message[]> {
     const db = await getDatabase();
     const rows = await db.getAllAsync(

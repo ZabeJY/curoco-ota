@@ -18,25 +18,20 @@ import SparkleText from '../../src/components/common/SparkleText';
 import { CloudSyncService } from '../../src/core/CloudSyncService';
 import { registerForPushNotifications, getStoredPushToken } from '../../src/core/PushNotificationManager';
 
-const CURRENT_VERSION = '1.8.2';
+const CURRENT_VERSION = '1.8.3';
 const VERSION_UPDATE_NOTES = [
-  '设计方案全面适配：8个弹窗替换为GlassModal',
-  '新建SparkleText闪光文字组件',
-  'GlassButton按钮组件全页面应用',
-  '空状态标题添加闪光粒子效果',
-  '用户签名添加闪光动效',
-  '法律声明弹窗关闭按钮移除',
-  '法律声明弹窗支持滚动查看',
-  '打赏页面商品名称优化',
-  '打赏页面移除扫码备注提示',
-  '我的页面签名位置调整',
-  '我的页面封底下移优化',
-  '消息列表/角色页设置按钮移除',
-  '透明顶栏内容重叠修复',
-  '聊天背景透明度滑条',
-  '菜单动画流畅度优化',
-  'App性能优化：轮询间隔+React.memo',
-  'TypeScript编译错误修复',
+  '修复语音通话无法使用：添加expo-av插件、麦克风权限请求、VAD检测优化',
+  '修复语音消息识别失败：atob兼容性修复、ASR语言动态化',
+  '人设与记忆跨界面同步：语音通话/群聊/主动消息补全userSignature和长期记忆',
+  '聊天记录分页加载：支持无限滚动查看全部历史消息',
+  '完整记忆模式真正实现：LLM上下文窗口从20条扩大到200条',
+  '生活打卡性能优化：数据库查询从1800+次降至3次',
+  '生活打卡UX改进：支持签到切换、编辑习惯名称',
+  '语音克隆情绪修复：通话中正确传递emotion参数给TTS',
+  '丰富情绪描述：扩展至16种情绪，增强克隆音色表达力',
+  '页面标题自适应颜色：浅色/深色背景下自动调整字体颜色',
+  '法律信息弹窗滚动优化：增加内容区域高度',
+  '支持开发者页面排版修复：卡片布局均匀分布',
 ];
 
 export default function SettingsPage() {
@@ -585,7 +580,7 @@ const legalStyles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(0,0,0,0.06)',
   },
   title: { fontSize: 17, fontWeight: '700', flex: 1 },
-  body: { paddingHorizontal: 20, paddingVertical: 16 },
+  body: { paddingHorizontal: 20, paddingVertical: 16, minHeight: 100 },
   text: { fontSize: 13, lineHeight: 22 },
   footer: {
     marginHorizontal: 20, marginBottom: 20, borderRadius: 14,

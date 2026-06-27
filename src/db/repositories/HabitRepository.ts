@@ -107,25 +107,37 @@ export const HabitRepository = {
   async getRecordsForMonth(habitId: string, yearMonth: string): Promise<string[]> {
     // yearMonth = "2026-06", returns ["2026-06-01", "2026-06-05", ...]
     const db = await getDatabase();
+    const [year, month] = yearMonth.split('-').map(Number);
+    const startDate = `${yearMonth}-01`;
+    const endMonth = month === 12 ? `${year + 1}-01` : `${yearMonth.slice(0, 7)}-${String(month + 1).padStart(2, '0')}`;
     const rows = await db.getAllAsync<{ date: string }>(
-      'SELECT date FROM habit_records WHERE habit_id = ? AND date LIKE ? ORDER BY date',
-      [habitId, `${yearMonth}%`]
+      'SELECT date FROM habit_records WHERE habit_id = ? AND date >= ? AND date < ? ORDER BY date',
+      [habitId, startDate, endMonth]
     );
     return rows.map(r => r.date);
   },
 
   async getStreak(habitId: string): Promise<number> {
-    // Count consecutive days ending today
+    // Single query: fetch all dates in reverse order, compute streak in JS
     const db = await getDatabase();
-    const today = new Date();
+    const today = new Date().toISOString().slice(0, 10);
+    const rows = await db.getAllAsync<{ date: string }>(
+      'SELECT DISTINCT date FROM habit_records WHERE habit_id = ? AND date <= ? ORDER BY date DESC LIMIT 365',
+      [habitId, today]
+    );
+    if (rows.length === 0) return 0;
     let streak = 0;
-    for (let i = 0; i < 365; i++) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().slice(0, 10);
-      const row = await db.getFirstAsync('SELECT 1 FROM habit_records WHERE habit_id = ? AND date = ?', [habitId, dateStr]);
-      if (row) streak++;
-      else break;
+    let expectedDate = today;
+    for (const row of rows) {
+      if (row.date === expectedDate) {
+        streak++;
+        // Move expected date to previous day
+        const d = new Date(expectedDate);
+        d.setDate(d.getDate() - 1);
+        expectedDate = d.toISOString().slice(0, 10);
+      } else {
+        break;
+      }
     }
     return streak;
   },
@@ -133,20 +145,60 @@ export const HabitRepository = {
   async getTotalDays(habitId: string): Promise<number> {
     const db = await getDatabase();
     const row = await db.getFirstAsync<{ c: number }>(
-      'SELECT COUNT(*) as c FROM habit_records WHERE habit_id = ?', [habitId]
+      'SELECT COUNT(DISTINCT date) as c FROM habit_records WHERE habit_id = ?', [habitId]
     );
     return row?.c ?? 0;
   },
 
   async getAllWithStreak(): Promise<HabitWithStreak[]> {
     const habits = await this.getAll();
+    if (habits.length === 0) return [];
     const today = new Date().toISOString().slice(0, 10);
+
+    // Batch query: get all records for all habits in one query
+    const db = await getDatabase();
+    const habitIds = habits.map(h => `'${h.id}'`).join(',');
+    const allRecords = await db.getAllAsync<{ habit_id: string; date: string }>(
+      `SELECT habit_id, date FROM habit_records WHERE habit_id IN (${habitIds}) ORDER BY date DESC`
+    );
+
+    // Group records by habit
+    const recordsByHabit = new Map<string, string[]>();
+    for (const r of allRecords) {
+      if (!recordsByHabit.has(r.habit_id)) recordsByHabit.set(r.habit_id, []);
+      recordsByHabit.get(r.habit_id)!.push(r.date);
+    }
+
+    // Get today's counts
+    const todayCounts = await db.getAllAsync<{ habit_id: string; c: number }>(
+      `SELECT habit_id, COUNT(*) as c FROM habit_records WHERE habit_id IN (${habitIds}) AND date = ? GROUP BY habit_id`,
+      [today]
+    );
+    const countMap = new Map(todayCounts.map(r => [r.habit_id, r.c]));
+
     const results: HabitWithStreak[] = [];
     for (const h of habits) {
-      const checkInCount = await this.getCheckInCount(h.id, today);
-      const streak = await this.getStreak(h.id);
-      const totalDays = await this.getTotalDays(h.id);
-      results.push({ ...h, checkInCount, streak, totalDays });
+      const dates = recordsByHabit.get(h.id) || [];
+      const checkInCount = countMap.get(h.id) || 0;
+
+      // Compute streak from sorted dates (descending)
+      let streak = 0;
+      let expectedDate = today;
+      for (const date of dates) {
+        if (date === expectedDate) {
+          streak++;
+          const d = new Date(expectedDate);
+          d.setDate(d.getDate() - 1);
+          expectedDate = d.toISOString().slice(0, 10);
+        } else if (date < expectedDate) {
+          break;
+        }
+      }
+
+      // Count unique days
+      const uniqueDays = new Set(dates).size;
+
+      results.push({ ...h, checkInCount, streak, totalDays: uniqueDays });
     }
     return results;
   },

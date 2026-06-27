@@ -221,7 +221,7 @@ class ProactiveManager {
 
       // Read user signature from settings
       const db = await getDatabase();
-      const sigRow = await db.getFirstAsync<any>('SELECT value FROM settings WHERE key = ?', ['userSignature']);
+      const sigRow = await db.getFirstAsync<any>('SELECT value FROM app_settings WHERE key = ?', ['userSignature']);
       const userSignature = sigRow?.value || '';
 
       const persona = await PersonaEngine.load(comp.id, userSignature);
@@ -265,8 +265,10 @@ class ProactiveManager {
                 const info = await FS.getInfoAsync(comp.ttsVoiceSampleUri);
                 if (info.exists) {
                   const b64 = await FS.readAsStringAsync(comp.ttsVoiceSampleUri, { encoding: FS.EncodingType.Base64 });
+                  const ext = comp.ttsVoiceSampleUri.split('.').pop()?.toLowerCase() || 'mp3';
+                  const mime = ext === 'wav' ? 'audio/wav' : ext === 'm4a' ? 'audio/mp4' : 'audio/mpeg';
                   model = 'mimo-v2.5-tts-voiceclone';
-                  voice = `data:audio/mp3;base64,${b64}`;
+                  voice = `data:${mime};base64,${b64}`;
                 }
               } else if (ttsId.startsWith('preset:')) {
                 voice = ttsId.slice(7);

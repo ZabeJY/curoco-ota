@@ -132,6 +132,13 @@ export default function VoiceCallScreen() {
     if (!resolvedAsrConfig.current) setAsrWarning('未配置语音识别，请在设置中添加ASR或配置MiMo LLM');
     if (companionId) CompanionRepository.getById(companionId).then(c => { if (c && !cancelledRef.current) setCompanion(c); });
 
+    // Request microphone permission early
+    Audio.requestPermissionsAsync().then(perm => {
+      if (!perm.granted && !cancelledRef.current) {
+        setAsrWarning('需要麦克风权限才能进行语音通话');
+      }
+    }).catch(() => {});
+
     // Entrance animation
     Animated.parallel([
       Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
@@ -219,7 +226,7 @@ export default function VoiceCallScreen() {
   }, [activeState]);
 
   // ─── TTS ───
-  async function speakText(text: string): Promise<boolean> {
+  async function speakText(text: string, emotion?: string): Promise<boolean> {
     if (!apiConfigs.tts || !companion || cancelledRef.current) return false;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
@@ -240,14 +247,14 @@ export default function VoiceCallScreen() {
                   const b64 = await FileSystem.readAsStringAsync(companion.ttsVoiceSampleUri, { encoding: FileSystem.EncodingType.Base64 });
                   const ext = companion.ttsVoiceSampleUri.split('.').pop()?.toLowerCase() || 'mp3';
                   model = 'mimo-v2.5-tts-voiceclone';
-                  voice = `data:audio/${ext === 'wav' ? 'wav' : 'mpeg'};base64,${b64}`;
+                  voice = `data:audio/${ext === 'wav' ? 'wav' : ext === 'm4a' ? 'mp4' : 'mpeg'};base64,${b64}`;
                 } else { voice = 'Chloe'; }
               } catch { voice = 'Chloe'; }
             } else { voice = 'Chloe'; }
           } else { voice = ttsId.startsWith('preset:') ? ttsId.slice(7) : (ttsId || 'Chloe'); }
           const ttsText = cleanForTTS(text).trim();
           if (!ttsText) return false;
-          audioUri = await Promise.race([client.synthesize(ttsText, model, voice), new Promise<string>((_, rej) => setTimeout(() => rej(new Error('TTS timeout')), 30000))]);
+          audioUri = await Promise.race([client.synthesize(ttsText, model, voice, emotion), new Promise<string>((_, rej) => setTimeout(() => rej(new Error('TTS timeout')), 30000))]);
         } else {
           const client = new TTSClient(apiConfigs.tts);
           const ttsText = cleanForTTS(text).trim();
@@ -293,26 +300,41 @@ export default function VoiceCallScreen() {
       addTranscript('user', userText);
 
       // LLM
-      const persona = companionId ? await PersonaEngine.load(companionId) : null;
+      const persona = companionId ? await PersonaEngine.load(companionId, settings.userSignature) : null;
       if (!persona || !apiConfigs.llm) { setActiveState('idle'); return; }
       const llm = new LLMClient(apiConfigs.llm);
+
+      // Build context: system prompt + long-term memory + call history
+      const systemPrompt = PromptBuilder.buildSystemPrompt(persona, 'voice_call');
+      let longTermMemory = '';
+      if (conversationId) {
+        try {
+          const conv = await ConversationRepository.getByCompanionId(companionId);
+          longTermMemory = conv?.longTermMemorySummary || '';
+        } catch {}
+      }
+      const memorySection = longTermMemory ? `\n\n---\n【长期记忆】\n${longTermMemory}` : '';
       const messages = [
-        { role: 'system' as const, content: PromptBuilder.buildSystemPrompt(persona, 'voice_call') },
+        { role: 'system' as const, content: systemPrompt + memorySection },
         ...historyRef.current.slice(-12),
       ];
       const raw = await llm.chat(messages);
-      const aiText = ResponseParser.parse(raw).messages.join(' ');
+      const parsed = ResponseParser.parse(raw);
+      const aiText = parsed.messages.join(' ');
       if (cancelledRef.current || !aiText) { setActiveState('idle'); return; }
       historyRef.current.push({ role: 'assistant', content: aiText });
       addTranscript('assistant', aiText);
 
-      // TTS
+      // TTS with emotion
       setActiveState('speaking');
-      await speakText(aiText);
+      await speakText(aiText, parsed.emotion);
     } catch (e) { console.warn('[Call] Cycle error:', e); }
   }
 
   // ─── VAD ───
+  const meteringReadingsRef = useRef<number[]>([]);
+  const recordingStartRef = useRef<number>(0);
+
   async function startVadListening() {
     if (cancelledRef.current || activeStateRef.current !== 'idle' || isMutedRef.current || !resolvedAsrConfig.current) return;
     try {
@@ -321,6 +343,8 @@ export default function VoiceCallScreen() {
       await recording.prepareToRecordAsync(RECORDING_OPTIONS);
       await recording.startAsync();
       recordingRef.current = recording;
+      recordingStartRef.current = Date.now();
+      meteringReadingsRef.current = [];
       setActiveState('listening');
       silenceStartRef.current = null;
       meteringTimerRef.current = setInterval(async () => {
@@ -329,18 +353,46 @@ export default function VoiceCallScreen() {
           const status = await recordingRef.current.getStatusAsync();
           if (!status.isRecording) return;
           const level = (status as any).metering ?? -160;
-          if (level < silenceThresholdDb) {
-            if (silenceStartRef.current === null) silenceStartRef.current = Date.now();
-            else if (Date.now() - silenceStartRef.current > silenceTimeoutMs) {
-              clearInterval(meteringTimerRef.current!); meteringTimerRef.current = null;
-              const rec = recordingRef.current; recordingRef.current = null;
-              await rec.stopAndUnloadAsync();
-              const uri = rec.getURI();
-              if (uri) await processAudio(uri);
-              setActiveState('idle');
-              if (!cancelledRef.current && callModeRef.current === 'vad' && !isMutedRef.current) setTimeout(startVadListening, 500);
+          meteringReadingsRef.current.push(level);
+          // Keep only last 10 readings
+          if (meteringReadingsRef.current.length > 10) meteringReadingsRef.current.shift();
+
+          const elapsed = Date.now() - recordingStartRef.current;
+          // Check if metering is working (not all -160)
+          const meteringWorking = meteringReadingsRef.current.some(v => v > -150);
+
+          if (meteringWorking) {
+            // Standard metering-based VAD
+            if (level < silenceThresholdDb) {
+              if (silenceStartRef.current === null) silenceStartRef.current = Date.now();
+              else if (Date.now() - silenceStartRef.current > silenceTimeoutMs) {
+                clearInterval(meteringTimerRef.current!); meteringTimerRef.current = null;
+                const rec = recordingRef.current; recordingRef.current = null;
+                await rec.stopAndUnloadAsync();
+                const uri = rec.getURI();
+                if (uri) await processAudio(uri);
+                setActiveState('idle');
+                if (!cancelledRef.current && callModeRef.current === 'vad' && !isMutedRef.current) setTimeout(startVadListening, 500);
+              }
+            } else { silenceStartRef.current = null; }
+          } else {
+            // Fallback: time-based recording when metering is unreliable
+            // Record for at least 1 second, then stop after silence timeout
+            if (elapsed > 1000) {
+              if (silenceStartRef.current === null) silenceStartRef.current = Date.now();
+              else if (Date.now() - silenceStartRef.current > silenceTimeoutMs) {
+                clearInterval(meteringTimerRef.current!); meteringTimerRef.current = null;
+                const rec = recordingRef.current; recordingRef.current = null;
+                await rec.stopAndUnloadAsync();
+                const uri = rec.getURI();
+                if (uri) await processAudio(uri);
+                setActiveState('idle');
+                if (!cancelledRef.current && callModeRef.current === 'vad' && !isMutedRef.current) setTimeout(startVadListening, 500);
+              }
             }
-          } else { silenceStartRef.current = null; }
+            // Reset silence timer periodically in fallback mode to allow longer speech
+            if (elapsed > 1000 && elapsed % 3000 < 150) silenceStartRef.current = Date.now();
+          }
         } catch {}
       }, 150);
     } catch { setActiveState('idle'); }
@@ -391,12 +443,21 @@ export default function VoiceCallScreen() {
     if (apiConfigs.llm && companionId) {
       try {
         const msgs = conversationId ? await MessageRepository.getRecent(conversationId, 3) : [];
-        const persona = await PersonaEngine.load(companionId);
+        const persona = await PersonaEngine.load(companionId, settings.userSignature);
         if (persona) {
           const ctx = msgs.length > 0 ? msgs.map(m => `${m.role === 'user' ? '用户' : persona.name}: ${m.content}`).join('\n') : '（首次通话）';
           const llm = new LLMClient(apiConfigs.llm);
+          // Inject long-term memory
+          let longTermMemory = '';
+          if (conversationId) {
+            try {
+              const conv = await ConversationRepository.getByCompanionId(companionId);
+              longTermMemory = conv?.longTermMemorySummary || '';
+            } catch {}
+          }
+          const memoryHint = longTermMemory ? `\n【长期记忆摘要】\n${longTermMemory.slice(0, 500)}` : '';
           const raw = await llm.chat([
-            { role: 'system', content: PromptBuilder.buildSystemPrompt(persona, 'voice_call') },
+            { role: 'system', content: PromptBuilder.buildSystemPrompt(persona, 'voice_call') + memoryHint },
             { role: 'user', content: `[接通电话，直接从话题切入。只输出你说的话。]\n\n聊天记录:\n${ctx}` },
           ]);
           dialogue = ResponseParser.parse(raw).messages.join(' ');
@@ -445,7 +506,7 @@ export default function VoiceCallScreen() {
     if (conversationId && apiConfigs.llm && companionId && !wasCalling) {
       setTimeout(async () => {
         try {
-          const persona = await PersonaEngine.load(companionId);
+          const persona = await PersonaEngine.load(companionId, settings.userSignature);
           if (!persona || !apiConfigs.llm) return;
           const llm = new LLMClient(apiConfigs.llm);
           if (hadAudio && turnCount > 0) {

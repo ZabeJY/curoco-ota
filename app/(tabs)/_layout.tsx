@@ -66,7 +66,7 @@ export default function TabLayout() {
           headerTitle: '消息',
           headerTransparent: true,
           headerStyle: { backgroundColor: 'transparent' },
-          headerTitleStyle: { fontSize: 18, fontWeight: '700', color: '#fff' },
+          headerTitleStyle: { fontSize: 18, fontWeight: '700', color: isDark ? 'rgba(255,255,255,0.92)' : 'rgba(0,0,0,0.85)' },
           tabBarIcon: ({ color, size }) => <Ionicons name="chatbubble-ellipses" size={size} color={color} />,
         }}
       />
@@ -77,7 +77,7 @@ export default function TabLayout() {
           headerTitle: '角色',
           headerTransparent: true,
           headerStyle: { backgroundColor: 'transparent' },
-          headerTitleStyle: { fontSize: 18, fontWeight: '700', color: '#fff' },
+          headerTitleStyle: { fontSize: 18, fontWeight: '700', color: isDark ? 'rgba(255,255,255,0.92)' : 'rgba(0,0,0,0.85)' },
           tabBarIcon: ({ color, size }) => <Ionicons name="people" size={size} color={color} />,
         }}
       />
@@ -88,6 +88,7 @@ export default function TabLayout() {
           headerTitle: 'Curoco Space',
           headerTransparent: true,
           headerStyle: { backgroundColor: 'transparent' },
+          headerTitleStyle: { fontSize: 18, fontWeight: '700', color: isDark ? 'rgba(255,255,255,0.92)' : 'rgba(0,0,0,0.85)' },
           tabBarIcon: ({ color, size }) => <Ionicons name="sparkles" size={size} color={color} />,
         }}
       />
@@ -98,6 +99,7 @@ export default function TabLayout() {
           headerTitle: '我的',
           headerTransparent: true,
           headerStyle: { backgroundColor: 'transparent' },
+          headerTitleStyle: { fontSize: 18, fontWeight: '700', color: isDark ? 'rgba(255,255,255,0.92)' : 'rgba(0,0,0,0.85)' },
           tabBarIcon: ({ color, size }) => <Ionicons name="person-circle" size={size} color={color} />,
         }}
       />

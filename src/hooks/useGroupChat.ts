@@ -40,10 +40,39 @@ export function useGroupChat(conversationId: string) {
   const recentDedupRef = useRef<Map<string, number>>(new Map());
 
   const { sessions, typingConversations, addMessage, setMessages, setTyping } = useChatStore();
-  const { apiConfigs } = useSettingsStore();
+  const { apiConfigs, settings } = useSettingsStore();
 
   const messages = sessions[conversationId] || [];
   const isTyping = typingConversations.has(conversationId);
+
+  // Pagination state
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const loadingMoreRef = useRef(false);
+
+  const loadMoreMessages = useCallback(async () => {
+    if (loadingMoreRef.current || !hasMore) return;
+    loadingMoreRef.current = true;
+    setIsLoadingMore(true);
+    try {
+      const currentMessages = useChatStore.getState().sessions[conversationId] || [];
+      if (currentMessages.length === 0) { setHasMore(false); return; }
+      const oldestMsg = currentMessages[0];
+      const olderMsgs = await MessageRepository.getOlderMessages(conversationId, oldestMsg.createdAt, 50);
+      if (olderMsgs.length === 0) {
+        setHasMore(false);
+      } else {
+        const existing = useChatStore.getState().sessions[conversationId] || [];
+        useChatStore.getState().setMessages(conversationId, [...olderMsgs.map(msgToDisplay), ...existing]);
+        if (olderMsgs.length < 50) setHasMore(false);
+      }
+    } catch (e) {
+      console.warn('Load more messages failed:', e);
+    } finally {
+      loadingMoreRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [conversationId, hasMore]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -61,7 +90,7 @@ export function useGroupChat(conversationId: string) {
         const loadedMembers: GroupMember[] = [];
 
         for (const row of memberRows) {
-          const persona = await PersonaEngine.load(row.companionId);
+          const persona = await PersonaEngine.load(row.companionId, settings.userSignature);
           if (!persona) continue;
 
           const llmConfig = apiConfigs.llm;
@@ -220,6 +249,7 @@ export function useGroupChat(conversationId: string) {
 
   return {
     messages, isTyping, isLoading, groupName, members,
+    hasMore, isLoadingMore, loadMoreMessages,
     sendText,
   };
 }
