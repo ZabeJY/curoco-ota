@@ -1,10 +1,10 @@
 {
-  "version": "1.8.5",
-  "versionCode": 25,
-  "downloadUrl": "https://github.com/ZabeJY/curoco-ota/releases/download/v1.8.5/Curoco_v1.8.5.apk",
+  "version": "1.8.6",
+  "versionCode": 26,
+  "downloadUrl": "https://github.com/ZabeJY/curoco-ota/releases/download/v1.8.6/Curoco_v1.8.6.apk",
   "changelog": [
-    "提升本地数据与媒体文件处理可靠性",
-    "加强群聊、通知、备份恢复和法律合规",
-    "优化设计组件与动画交互"
+    "透明顶栏随封面和滚动位置自适应文字颜色",
+    "重做我的动态展示结构",
+    "重做生活打卡与强度热力月历"
   ]
 }
