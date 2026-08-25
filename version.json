@@ -1,8 +1,10 @@
 {
-  "version": "1.8.4",
-  "versionCode": 24,
-  "downloadUrl": "https://github.com/ZabeJY/curoco/releases/download/v1.8.4/Curoco_v1.8.4.apk",
+  "version": "1.8.5",
+  "versionCode": 25,
+  "downloadUrl": "https://github.com/ZabeJY/curoco-ota/releases/download/v1.8.5/Curoco_v1.8.5.apk",
   "changelog": [
-    "v1.8.4: 修复消息删除持久化, 时间感知优化, 沉默追问, 消息连发处理, 角色发表情包"
+    "提升本地数据与媒体文件处理可靠性",
+    "加强群聊、通知、备份恢复和法律合规",
+    "优化设计组件与动画交互"
   ]
 }
