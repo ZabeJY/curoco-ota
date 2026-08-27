@@ -1,12 +1,10 @@
 {
-  "version": "1.9.0",
-  "versionCode": 28,
-  "downloadUrl": "https://github.com/ZabeJY/curoco-ota/releases/download/v1.9.0/Curoco_v1.9.0.apk",
+  "version": "1.9.1",
+  "versionCode": 29,
+  "downloadUrl": "https://github.com/ZabeJY/curoco-ota/releases/download/v1.9.1/Curoco_v1.9.1.apk",
   "changelog": [
-    "顶栏根据封面实际颜色智能选择高对比文字",
-    "恢复我的页面结构并简化生活打卡",
-    "扩展MiMo、DeepSeek、OpenAI及中转API兼容",
-    "完整支持MiMo预置、文本设计和克隆音色",
-    "重做语音通话并统一全局设计"
+    "修复通知权限已开启时的推送启用误报，并增加系统通知设置入口",
+    "动态与我的页面使用固定透明顶栏，标题颜色只根据自定义封面取色",
+    "动态相机按钮固定在右上角，并精简我的页面的状态表达"
   ]
 }
